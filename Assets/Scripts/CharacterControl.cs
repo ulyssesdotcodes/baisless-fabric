@@ -34,6 +34,7 @@ public class CharacterControl : MonoBehaviour
     void Start()
     {
         m_Animator = GetComponent<Animator>();
+        m_Animator.applyRootMotion = false;
         m_Rigidbody = GetComponent<Rigidbody>();
         m_Capsule = GetComponent<CapsuleCollider>();
         m_CapsuleHeight = m_Capsule.height;

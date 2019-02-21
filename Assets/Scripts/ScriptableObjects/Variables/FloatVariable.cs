@@ -5,16 +5,17 @@ using UnityEngine;
 public class FloatVariable : ScriptableObject, ISerializationCallbackReceiver {
     public float InitialValue;
 
-    public float RuntimeValue;
+    private float runtimeValue;
+    public virtual float RuntimeValue { get { return runtimeValue; } set { this.runtimeValue = value; } }
 
     public void OnBeforeSerialize() { }
 
     public void OnAfterDeserialize()
     {
-        RuntimeValue = InitialValue;
+        runtimeValue = InitialValue;
     }
 
     public void OnValidate() {
-        RuntimeValue = InitialValue;
+        // RuntimeValue = InialValue;
     }
 }

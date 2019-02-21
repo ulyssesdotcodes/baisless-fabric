@@ -11,7 +11,7 @@ class SliderFloatVariable : FloatVariable {
     [SerializeField] 
     float SliderValue;
 
-    void OnValidate(){
+    new public void OnValidate(){
         InitialValue = Mathf.Lerp(min, max, SliderValue) * mult;
     }
 }
