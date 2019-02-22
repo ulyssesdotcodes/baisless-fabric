@@ -15,7 +15,7 @@ public class RepeatingSpawnTrigger : SpawnTrigger
         lastPosition = 0f;
     }
 
-    public override bool ShouldSpawn()
+    public override bool Spawn()
     {
         bool shouldSpawn = (Position.RuntimeValue + Offset) % BeatMod < (lastPosition + Offset) % BeatMod;
         lastPosition = Position.RuntimeValue;

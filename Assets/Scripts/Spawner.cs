@@ -21,10 +21,18 @@ public class Spawner : MonoBehaviour
             return;
         }
 
+        List<SpawnTrigger> removes = new List<SpawnTrigger>();
         foreach(SpawnTrigger st in SpawnTriggers) {
-            if(st.ShouldSpawn()) {
-                Instantiate(st.Prefab, new Vector3(0, st.yOffset, Ground.GameSpeed.RuntimeValue * 2f), Quaternion.identity);
+            if(st.Spawn()) {
+                Instantiate(st.Prefab, new Vector3(0, st.yOffset,Ground.GameSpeed.RuntimeValue * 2f), Quaternion.identity);
+                if(st.oneshot) {
+                    removes.Add(st);
+                }
             }
+        }
+
+        foreach(SpawnTrigger rem in removes) {
+            SpawnTriggers.Remove(rem);
         }
     }
 }

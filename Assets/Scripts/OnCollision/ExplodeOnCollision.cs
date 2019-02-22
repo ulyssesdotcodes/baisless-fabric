@@ -18,7 +18,7 @@ public class ExplodeOnCollision : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-    }
+   }
 
     void OnTriggerEnter(Collider other) {
         GameObject.Destroy(gameObject);
@@ -41,7 +41,7 @@ public class ExplodeOnCollision : MonoBehaviour
                 Rigidbody rb = cube.AddComponent(typeof(Rigidbody)) as Rigidbody;
                 Vector3 explodepos = new Vector3(transform.position.x, offsety, transform.position.z);
                 rb.mass = CubeSize;
-                // rb.velocity = new Vector3(0, 0, -gm.GameSpeed.RuntimeValue);
+                rb.velocity = new Vector3(0, 0, gm.GameSpeed.RuntimeValue);
                 rb.AddExplosionForce(ExplosionForce * gm.GameSpeed.RuntimeValue, explodepos, 0.25f, UpForce, ForceMode.Impulse);
 
                 GameObject.Destroy(cube, 1f);

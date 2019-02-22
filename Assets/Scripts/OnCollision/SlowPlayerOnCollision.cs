@@ -18,7 +18,7 @@ public class SlowPlayerOnCollision : MonoBehaviour
     }
 
     void OnTriggerEnter(Collider collider) {
-        if(collider.name == "Player") {
+        if(collider.tag == "Player") {
             collider.gameObject.GetComponent<CharacterControl>().OnSlow(Amount * GetComponent<GroundMotion>().GameSpeed.RuntimeValue);
         }
     }

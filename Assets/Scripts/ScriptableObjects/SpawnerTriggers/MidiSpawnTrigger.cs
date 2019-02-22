@@ -5,7 +5,7 @@ using MidiJack;
 class MidiSpawnTrigger : SpawnTrigger {
     [SerializeField] int note;
 
-    override public bool ShouldSpawn(){
+    override public bool Spawn(){
         return MidiMaster.GetKeyDown(MidiChannel.Ch1, note);
     }
 }
