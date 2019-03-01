@@ -243,7 +243,7 @@ public class CharacterControl : MonoBehaviour
     public void OnSlow(float amount) {
         PlayerSpeed.RuntimeValue -= amount;
         if(mAnimTween != null) StopCoroutine(mAnimTween);
-        mAnimTween = StartCoroutine(AnimateTween("Stumble", -1, 0, 1.2f));
+        mAnimTween = StartCoroutine(AnimateToggle("Stumble", -1, 0, 0.92f));
     }
 
     private IEnumerator AnimateTween(string param, float alphaStart, float alphaFinish, float time) {
@@ -258,5 +258,11 @@ public class CharacterControl : MonoBehaviour
         }
 
         mAnimTween = null;
+    }
+
+    private IEnumerator AnimateToggle(string param, float alphaStart, float alphaFinish, float time) {
+        m_Animator.SetFloat(param, alphaStart);
+        yield return new WaitForSeconds(time);
+        m_Animator.SetFloat(param, alphaFinish);
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(GroundMotion))]
 public class SlowPlayerOnCollision : MonoBehaviour
 {
-    [SerializeField] float Amount;
+    public float Amount;
     // Start is called before the first frame update
     void Start()
     {

@@ -9,10 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
-  m_Script: {fileID: 11500000, guid: 735022031e2c347b9a163bf844787121, type: 3}
-  m_Name: Cube
+  m_Script: {fileID: 11500000, guid: 492fd9d5b10a0dc4c9e8ea94e40ae082, type: 3}
+  m_Name: SlowPlayer
   m_EditorClassIdentifier: 
-  yOffset: 1.17
-  Prefab: {fileID: 1315740946472911242, guid: 500b3b07990af41ef92c08d7d5d50f22, type: 3}
-  note: 3
+  Amount: 0.33

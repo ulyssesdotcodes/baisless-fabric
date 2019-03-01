@@ -5,13 +5,14 @@ using UnityEngine;
 [CreateAssetMenu(menuName="SpawnTrigger/Oneshot")]
 public class OneshotSpawnTrigger : SpawnTrigger
 {
+    public SpawnInfo spawnInfo;
     // Start is called before the first frame update
     public OneshotSpawnTrigger() {
         oneshot = true;
     }
 
-    public override bool Spawn()
+    public override Optional<SpawnInfo> Spawn()
     {
-        return true;
+        return Optional<SpawnInfo>.of(spawnInfo);
     }
 }

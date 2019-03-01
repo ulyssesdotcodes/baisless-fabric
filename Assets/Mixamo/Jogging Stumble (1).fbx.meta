@@ -173,7 +173,7 @@ ModelImporter:
       name: Stumble
       takeName: mixamo.com
       firstFrame: 5.3
-      lastFrame: 30.4
+      lastFrame: 35
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -183,7 +183,7 @@ ModelImporter:
       loopTime: 1
       loopBlend: 0
       loopBlendOrientation: 1
-      loopBlendPositionY: 0
+      loopBlendPositionY: 1
       loopBlendPositionXZ: 0
       keepOriginalOrientation: 0
       keepOriginalPositionY: 1

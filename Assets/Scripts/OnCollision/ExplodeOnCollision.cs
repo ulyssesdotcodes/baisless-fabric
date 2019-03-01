@@ -5,9 +5,9 @@ using UnityEngine;
 [RequireComponent(typeof(GroundMotion))]
 public class ExplodeOnCollision : MonoBehaviour
 {
-    [SerializeField] float CubeSize = 0.1f;
-    [SerializeField] float ExplosionForce = 200f;
-    [SerializeField] float UpForce = 10f;
+    public float CubeSize = 0.1f;
+    public float ExplosionForce = 2f;
+    public float UpForce = 10f;
 
     // Start is called before the first frame update
     void Start()
@@ -21,6 +21,10 @@ public class ExplodeOnCollision : MonoBehaviour
    }
 
     void OnTriggerEnter(Collider other) {
+        if(other.gameObject.tag != "player") {
+            return;
+        }
+
         GameObject.Destroy(gameObject);
 
         GroundMotion gm = GetComponent<GroundMotion>();

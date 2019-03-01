@@ -23,8 +23,13 @@ public class Spawner : MonoBehaviour
 
         List<SpawnTrigger> removes = new List<SpawnTrigger>();
         foreach(SpawnTrigger st in SpawnTriggers) {
-            if(st.Spawn()) {
-                Instantiate(st.Prefab, new Vector3(0, st.yOffset,Ground.GameSpeed.RuntimeValue * 2f), Quaternion.identity);
+            Optional<SpawnInfo> spawn = st.Spawn();
+            if(!spawn.isNothing) {
+                SpawnInfo si = spawn.value;
+                GameObject instantiated = Instantiate(si.Prefab, new Vector3(0, si.yOffset,Ground.GameSpeed.RuntimeValue * 2f), Quaternion.identity);
+                foreach(OnCollisionParams onCollision in si.OnCollisionParams) {
+                    onCollision.AddComponent(instantiated);
+                }
                 if(st.oneshot) {
                     removes.Add(st);
                 }

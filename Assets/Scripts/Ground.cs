@@ -21,6 +21,6 @@ public class Ground : MonoBehaviour
     {
         // Adjust for a measure
         Position.RuntimeValue += GameSpeed.RuntimeValue * Time.deltaTime;
-        GetComponent<Renderer>().materials[0].SetFloat("_Speed", (-Position.RuntimeValue * 0.5f) % 1 + 1);
+        GetComponent<Renderer>().materials[0].SetFloat("_Speed", (-Position.RuntimeValue) % 1 + 1);
     }
 }

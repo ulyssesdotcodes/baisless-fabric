@@ -4,12 +4,16 @@ using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
 [RequireComponent(typeof(Collider))]
-public class InvertOnCollision : MonoBehaviour
+public class PostProcessOnCollision : MonoBehaviour
 {
+    public PostProcessEffectSettings settings;
+
     void OnTriggerEnter(Collider other){
         PostProcessVolume layer = PostProcessManager.instance.GetHighestPriorityVolume(Camera.main.GetComponent<PostProcessLayer>());
-        Invert settings = layer.profile.GetSetting<Invert>();
-        settings.invert.value = Mathf.Abs(settings.invert.value - 1);
+        if(layer.profile.HasSettings(settings.GetType())) {
+            layer.profile.RemoveSettings(settings.GetType());
+        }
+        layer.profile.AddSettings(settings);
         Destroy(gameObject);
     }
 }
