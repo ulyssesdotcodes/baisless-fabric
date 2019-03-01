@@ -26,7 +26,7 @@ public class Spawner : MonoBehaviour
             Optional<SpawnInfo> spawn = st.Spawn();
             if(!spawn.isNothing) {
                 SpawnInfo si = spawn.value;
-                GameObject instantiated = Instantiate(si.Prefab, new Vector3(0, si.yOffset,Ground.GameSpeed.RuntimeValue * 2f), Quaternion.identity);
+                GameObject instantiated = Instantiate(si.Prefab, new Vector3(0, si.yOffset, 4f), Quaternion.identity);
                 foreach(OnCollisionParams onCollision in si.OnCollisionParams) {
                     onCollision.AddComponent(instantiated);
                 }

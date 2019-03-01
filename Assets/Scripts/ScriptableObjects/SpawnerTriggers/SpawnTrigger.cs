@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 
+[Serializable]
 public class SpawnInfo {
     public float yOffset;
     public GameObject Prefab; 

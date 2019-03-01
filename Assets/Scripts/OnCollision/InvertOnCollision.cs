@@ -7,6 +7,10 @@ using UnityEngine.Rendering.PostProcessing;
 public class InvertOnCollision : MonoBehaviour
 {
     void OnTriggerEnter(Collider other){
+        if(other.gameObject.tag != "Player") {
+            return;
+        }
+
         PostProcessVolume layer = PostProcessManager.instance.GetHighestPriorityVolume(Camera.main.GetComponent<PostProcessLayer>());
         Invert settings = layer.profile.GetSetting<Invert>();
         settings.invert.value = Mathf.Abs(settings.invert.value - 1);

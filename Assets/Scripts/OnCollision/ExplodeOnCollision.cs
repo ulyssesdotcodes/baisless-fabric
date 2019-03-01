@@ -21,7 +21,7 @@ public class ExplodeOnCollision : MonoBehaviour
    }
 
     void OnTriggerEnter(Collider other) {
-        if(other.gameObject.tag != "player") {
+        if(other.gameObject.tag != "Player") {
             return;
         }
 
