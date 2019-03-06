@@ -2,7 +2,7 @@ using UnityEngine;
 using MidiJack;
 
 [CreateAssetMenu(menuName="OnCollisionParams/SpotLumens")]
-class SpotLumensOnCollisionParams : OnCollisionParams {
+class SpotLumensOnCollisionParams : ComponentParams {
     public float lumens;
     public int index;
 

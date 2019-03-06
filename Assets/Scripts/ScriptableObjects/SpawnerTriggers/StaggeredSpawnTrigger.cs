@@ -4,7 +4,7 @@ using UnityEngine;
 
 
 
-[CreateAssetMenu(menuName="SpawnTrigger/Repeating")]
+[CreateAssetMenu(menuName="SpawnTrigger/Staggered")]
 public class GroupedSpawnTrigger : SpawnTrigger
 {
     float lastPosition;

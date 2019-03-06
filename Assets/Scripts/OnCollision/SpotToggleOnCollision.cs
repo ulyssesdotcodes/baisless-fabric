@@ -11,6 +11,7 @@ public class SpotToggleOnCollision : MonoBehaviour
         if(collider.name == "Player"){
             GameObject.FindGameObjectsWithTag("spot")[index].GetComponent<Light>().enabled = 
                 !GameObject.FindGameObjectsWithTag("spot")[index].GetComponent<Light>().enabled; 
+            Destroy(gameObject);
         }
     }
 }

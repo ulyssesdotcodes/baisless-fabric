@@ -1,23 +1,26 @@
 (ns fighter-tutorial.core
   (:use arcadia.core arcadia.linear)
   (:import [UnityEngine Physics
-            GameObject Input 
+            GameObject Input
             Vector2 Mathf Resources Transform
-            PrimitiveType
-            Collider]
-          Spawner
-          SlowPlayerOnCollision
-          RepeatingSpawnTrigger
-          ExplodeOnCollision
-          InvertOnCollision
-          SpotToggleOnCollision
-          ArcadiaState
-          GroundMotion
-          SpawnInfo)
-  )
+            PrimitiveType Collider Light Renderer
+            Color]
+           [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
+           RoadSpawner
+           SlowPlayerOnCollision
+           RepeatingSpawnTrigger
+           ExplodeOnCollision
+           InvertOnCollision
+           SpotToggleOnCollision
+           ArcadiaState
+           GroundMotion
+           SpawnInfo
+           DestroyAfterPosition))
 
-(defonce POOL (atom (.Pool (cmpt (object-named "Spawner") Spawner))))
-(defonce SPAWNER (atom (cmpt (object-named "Spawner") Spawner)))
+(defrecord SpawnComp [component paramf])
+
+(defonce POOL (atom (.Pool (cmpt (object-named "Spawner") RoadSpawner))))
+(defonce SPAWNER (atom (cmpt (object-named "Spawner") RoadSpawner)))
 
 (defn add-spawntrigger [st]
   (.. @SPAWNER SpawnTriggers (Add st)))
@@ -45,32 +48,48 @@
     (set! (.spawnInfo st) spawninfo) 
     st))
 
-(defn add-components [^GameObject prefab components]
-  (doall (map #(ensure-cmpt prefab %) components))
-  prefab)
-
-(defn set-defaults [^GameObject prefab]
-  (let [gm (ensure-cmpt prefab GroundMotion)]
-    (set! (.Position gm) (Resources/Load "ScriptableObjects/Variables/Position"))
-    (set! (.GameSpeed gm) (Resources/Load "ScriptableObjects/Variables/Global/GameSpeed")))
-  (-> (ensure-cmpt prefab Collider) .isTrigger (set! true))
-  prefab)
-
-(defn repeat-trigger [prim mod components]
-  (-> (create-primitive prim)
-    (parent! @POOL)
-    (add-components components)
-    set-defaults
+(defn repeat-trigger [prefab mod]
+  (-> prefab
     (create-spawn-info)
     (create-repeating mod)))
-    ))
+
+(defn add-components [^GameObject prefab components]
+  (doall (map (fn [{:keys [component paramf]}] 
+    (paramf (ensure-cmpt prefab component))) components))
+  prefab)
+
+(defn create-from-components [parent gob components]
+  (-> gob 
+  (add-components components)
+  (parent! parent)))
+
+(def default-ground-motion
+  (SpawnComp. 
+   GroundMotion
+   #(do
+      (set! (.Position %1) (Resources/Load "ScriptableObjects/Variables/Position"))
+      (set! (.GameSpeed %1) (Resources/Load "ScriptableObjects/Variables/Global/GameSpeed")))))
+
+(defn create-glow-light [parent col lumens]
+  (let [gob (create-from-components
+             parent (GameObject/Instantiate (Resources/Load "Prefabs/GlowLight"))
+             [(SpawnComp. DestroyAfterPosition identity)
+              default-ground-motion])
+        light (cmpt (first (children gob)) Light)
+        hdlight (cmpt (first (children gob)) HDAdditionalLightData)
+        mat (.material (cmpt gob Renderer))]
+    (set! (.color light) col)
+    (set! (.intensity hdlight) lumens)
+    (.SetColor mat "_Color" col)
+    (.SetFloat mat "_Lumens" lumens)
+    gob))
 
 (do
   (clear-pool)
   (clear-spawner)
-  (add-spawntrigger (repeat-trigger :cube 16 [ExplodeOnCollision SlowPlayerOnCollision GroundMotion InvertOnCollision]))
-  (add-spawntrigger (repeat-trigger :sphere 2 [SpotToggleOnCollision]))
-  )
+  (-> (create-glow-light @POOL (Color/cyan) (float 120))
+    (repeat-trigger 1)
+    (add-spawntrigger)))
 
 (let 
   [ sphere (create-ground-explode-sphere) 

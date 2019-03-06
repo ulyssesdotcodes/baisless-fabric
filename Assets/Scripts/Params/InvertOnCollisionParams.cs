@@ -2,7 +2,7 @@ using UnityEngine;
 using MidiJack;
 
 [CreateAssetMenu(menuName="OnCollisionParams/Invert")]
-class InvertOnCollisionParams : OnCollisionParams {
+class InvertOnCollisionParams : ComponentParams {
 
     public override void AddComponent(GameObject gameObject)
     {

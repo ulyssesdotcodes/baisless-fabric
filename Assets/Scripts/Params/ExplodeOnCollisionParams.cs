@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(menuName="OnCollisionParams/Explode")]
-class ExplodeOnCollisionParams : OnCollisionParams {
+class ExplodeOnCollisionParams : ComponentParams {
     [SerializeField] float CubeSize = 0.1f;
     [SerializeField] float ExplosionForce = 2f;
     [SerializeField] float UpForce = 10f;

@@ -2,7 +2,7 @@ using UnityEngine;
 using MidiJack;
 
 [CreateAssetMenu(menuName="OnCollisionParams/SlowPlayer")]
-class SlowPlayerOnCollisionParams : OnCollisionParams {
+class SlowPlayerOnCollisionParams : ComponentParams {
     [SerializeField] float Amount = 0.33f;
 
     public override void AddComponent(GameObject gameObject)

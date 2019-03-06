@@ -2,7 +2,7 @@ using UnityEngine;
 using MidiJack;
 
 [CreateAssetMenu(menuName="OnCollisionParams/SpotColor")]
-class SpotColorOnCollisionParams : OnCollisionParams {
+class SpotColorOnCollisionParams : ComponentParams {
     public Color color;
     public int index;
 
