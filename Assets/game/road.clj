@@ -1,5 +1,10 @@
-(ns fighter-tutorial.core
-  (:use arcadia.core arcadia.linear)
+(ns game.road
+  (use
+   arcadia.core
+   arcadia.linear
+   tween.core
+   hard.core
+   game.spawner)
   (:import [UnityEngine Physics
             GameObject Input
             Vector2 Mathf Resources Transform
@@ -15,60 +20,29 @@
            ArcadiaState
            GroundMotion
            SpawnInfo
-           DestroyAfterPosition))
+           FloatVariable
+           GlitchOnCollision
+           CameraShakeOnCollision
+           StopCameraShakeOnCollision
+           CameraShake
+           CameraShakeManager
+           CameraShake+ShakeType
+           CameraShake+NoiseType
+           DestroyAfterPosition
+           [game.spawner SpawnComp]))
 
-(defrecord SpawnComp [component paramf])
+(use 'game.spawner :reload)
 
-(defonce POOL (atom (.Pool (cmpt (object-named "Spawner") RoadSpawner))))
-(defonce SPAWNER (atom (cmpt (object-named "Spawner") RoadSpawner)))
+(clear-pool)
 
-(defn add-spawntrigger [st]
-  (.. @SPAWNER SpawnTriggers (Add st)))
+(clear-spawner)
 
-(defn clear-spawner []
-  (.. @SPAWNER SpawnTriggers
-    (Clear)))
+(defn speed [s]
+  (let [bpmspeed (Resources/Load "ScriptableObjects/Variables/BPMSpeed")]
+  (set! (.SliderValue bpmspeed) (float s))
+  (.OnValidate bpmspeed)))
 
-(defn clear-pool []
-  (doall (map destroy (children @POOL))))
-
-(defn ^GameObject parent! [^GameObject a ^GameObject b]
-  (set! (.parent (.transform a)) (.transform b)) a)
-
-(defn create-spawn-info [^GameObject prefab]
-  (let [si (new SpawnInfo)]
-    (set! (.yOffset si) 0.5) 
-    (set! (.Prefab si) prefab)
-    si))
-
-(defn create-repeating [spawninfo mod]
-  (let [st (ScriptableObject/CreateInstance "RepeatingSpawnTrigger")]
-    (set! (.BeatMod st) mod)
-    (set! (.Position st) (Resources/Load (str "ScriptableObjects/Variables/Position")))
-    (set! (.spawnInfo st) spawninfo) 
-    st))
-
-(defn repeat-trigger [prefab mod]
-  (-> prefab
-    (create-spawn-info)
-    (create-repeating mod)))
-
-(defn add-components [^GameObject prefab components]
-  (doall (map (fn [{:keys [component paramf]}] 
-    (paramf (ensure-cmpt prefab component))) components))
-  prefab)
-
-(defn create-from-components [parent gob components]
-  (-> gob 
-  (add-components components)
-  (parent! parent)))
-
-(def default-ground-motion
-  (SpawnComp. 
-   GroundMotion
-   #(do
-      (set! (.Position %1) (Resources/Load "ScriptableObjects/Variables/Position"))
-      (set! (.GameSpeed %1) (Resources/Load "ScriptableObjects/Variables/Global/GameSpeed")))))
+(speed 0)
 
 (defn create-glow-light [parent col lumens]
   (let [gob (create-from-components
@@ -84,12 +58,80 @@
     (.SetFloat mat "_Lumens" lumens)
     gob))
 
+(clear-pool)
+
+(defn repeating [go w pos]
+  (timeline* 
+   :loop
+   (wait w)
+   #(do (instantiate go pos) nil)))
+
+(clear-cloned!)
+
+(repeating)
+
+(destroy! (mono-obj))
+(timeline* :loop #(log "hi") (wait 0.2))
+
+(repeating (create-glow-light @POOL (Color/cyan) (float 60)) 1 (v3 -0.5 1 4))
+
+(-> (create-empty :))
+
+(defn glitch-oncol 
+  ([sl] (glitch-oncol sl 0 0 0))
+  ([sl vj] (glitch-oncol sl vj 0 0))
+  ([sl vj hs] (glitch-oncol sl vj hs 0))
+  ([sl vj hs cd] 
+   (SpawnComp. 
+    GlitchOnCollision 
+    #(do
+       (set! (.ScanLine %1) (float-var sl)) 
+       (set! (.VerticalJump %1) (float-var vj)) 
+       (set! (.HorizontalShake %1) (float-var hs)) 
+       (set! (.ColorDrift %1) (float-var cd)) 
+       %1))))
+
+(defn repeating-comp [gob mod off comp]
+  (-> (create-from-components 
+       @POOL
+       gob
+       [comp
+        default-ground-motion
+        trigger-collider])
+      (repeat-trigger mod 0.5 0.5 4 off)
+      (add-spawntrigger)))
+
+(def ambient-shake (new-ambient-shake))
+
+(defn new-ambient-shake [] (let [cs (ScriptableObject/CreateInstance "CameraShake")]
+    (set! (.Shake cs) (enum-val CameraShake+ShakeType "Constant"))
+    (set! (.Noise cs) (enum-val CameraShake+NoiseType "Perlin"))
+    (set! (.RotateExtents cs) (v3 0.1 0.1 0.1))
+    (set! (.MoveExtents cs) (v3 0.5 0.5 0.5))
+    (set! (.Speed cs) (float 0.25))
+    (set! (.Duration cs) (float -1))
+    cs))
+
+(defn camerashake-oncol []
+  (let [cs (new-ambient-shake)]
+  [(SpawnComp. CameraShakeOnCollision #(do (set! (.CameraShake %1) cs))) 
+   (SpawnComp. StopCameraShakeOnCollision #(do (set! (.CameraShake %1) cs)))]))
+
+(.Play (cmpt (object-named "Camera") CameraShakeManager) ambient-shake)
+(.Stop (cmpt (object-named "Camera") CameraShakeManager) ambient-shake false)
+(.StopAll (cmpt (object-named "Camera") CameraShakeManager) false)
+
 (do
   (clear-pool)
   (clear-spawner)
-  (-> (create-glow-light @POOL (Color/cyan) (float 120))
-    (repeat-trigger 1)
-    (add-spawntrigger)))
+  (repeating-comp (create-primitive :cube) 4 1 (glitch-oncol 0.2 0.2 0 0.2))
+  (repeating-comp (create-primitive :cube) 4 0 (glitch-oncol 0 0.05 0 0))
+  (let [cs (camerashake-oncol)]
+    (repeating-comp (create-primitive :sphere) 16 8 (first cs))
+    (repeating-comp (create-primitive :sphere) 16 0 (last cs))))
+
+(destroy (object-named "Cube"))
+
 
 (let 
   [ sphere (create-ground-explode-sphere) 

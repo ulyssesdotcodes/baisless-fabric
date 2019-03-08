@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class SpawnInfo {
     public float yOffset;
     public float xOffset;
+    public float zOffset;
     public GameObject Prefab; 
     public List<ComponentParams> ComponentParams;
 

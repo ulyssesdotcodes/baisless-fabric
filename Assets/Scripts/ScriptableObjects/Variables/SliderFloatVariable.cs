@@ -9,9 +9,10 @@ class SliderFloatVariable : FloatVariable {
 
     [Range(0, 1)]
     [SerializeField] 
-    float SliderValue;
+    public float SliderValue;
 
     new public void OnValidate(){
         InitialValue = Mathf.Lerp(min, max, SliderValue) * mult;
+        base.OnValidate();
     }
 }

@@ -1,0 +1,6 @@
+[submodule "Assets/Arcadia Scripts/hard"]
+	path = Assets/Arcadia Scripts/hard
+	url = https://github.com/selfsame/hard
+[submodule "Assets/Arcadia Scripts/tween"]
+	path = Assets/Arcadia Scripts/tween
+	url = https://github.com/selfsame/tween
