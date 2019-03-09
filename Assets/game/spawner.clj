@@ -58,10 +58,20 @@
      (set! (.spawnInfo st) spawninfo)
      st)))
 
+(defn create-oneshot [spawninfo]
+  (let [st (ScriptableObject/CreateInstance "OneshotSpawnTrigger")]
+    (set! (.spawnInfo st) spawninfo)
+    st))
+
+(defn spawn-trigger [prefab x y z cfn]
+  (-> (create-spawn-info prefab x y z)
+      (cfn)))
+
 (defn repeat-trigger [prefab mod x y z off]
-  (-> prefab
-    (create-spawn-info x y z)
-    (create-repeating mod off)))
+  (spawn-trigger prefab x y z #(create-repeating %1 mod off)))
+
+(defn oneshot-trigger [prefab x y z]
+  (spawn-trigger prefab x y z #(create-oneshot %1)))
 
 (defn add-spawntrigger [st]
   (.. @SPAWNER SpawnTriggers (Add st)))
@@ -73,9 +83,9 @@
       (set! (.isTrigger %1) true))))
 
 (defn create-from-components [parent gob components]
-  (-> gob 
-  (add-components components)
-  (parent! parent)))
+  (if parent (parent! gob parent) ())
+  (add-components gob components)
+  gob)
 
 (defn float-var [f]
   (let [fv (ScriptableObject/CreateInstance "FloatVariable")]
@@ -88,3 +98,16 @@
    #(do
       (set! (.Position %1) (Resources/Load "ScriptableObjects/Variables/Position"))
       (set! (.GameSpeed %1) (Resources/Load "ScriptableObjects/Variables/Global/GameSpeed")))))
+
+(defn create-ground-col-with [parent gob comps]
+  (create-from-components parent gob (into [] (concat comps [default-ground-motion trigger-collider]))))
+
+(defn repeating-comp [gob comps pos mod off]
+  (-> (create-ground-col-with @POOL gob comps)
+      (repeat-trigger mod (.x pos) (.y pos) (.z pos) off)
+      (add-spawntrigger)))
+
+(defn oneshot-comp [gob comps pos]
+  (let [pooled (create-ground-col-with @POOL gob comps)]
+    (instantiate pooled pos)
+    (destroy pooled)))

@@ -14,6 +14,7 @@
            RoadSpawner
            SlowPlayerOnCollision
            RepeatingSpawnTrigger
+           OneshotSpawnTrigger
            ExplodeOnCollision
            InvertOnCollision
            SpotToggleOnCollision
@@ -29,9 +30,12 @@
            CameraShake+ShakeType
            CameraShake+NoiseType
            DestroyAfterPosition
+           VFXOnCollision
            [game.spawner SpawnComp]))
 
 (use 'game.spawner :reload)
+
+(destroy (object-named "Cube"))
 
 (clear-pool)
 
@@ -39,10 +43,11 @@
 
 (defn speed [s]
   (let [bpmspeed (Resources/Load "ScriptableObjects/Variables/BPMSpeed")]
-  (set! (.SliderValue bpmspeed) (float s))
-  (.OnValidate bpmspeed)))
+    (set! (.SliderValue bpmspeed) (float s))
+    (.OnValidate bpmspeed))
+  (def gamespeed s))
 
-(speed 0)
+(speed 0.3)
 
 (defn create-glow-light [parent col lumens]
   (let [gob (create-from-components
@@ -91,16 +96,6 @@
        (set! (.ColorDrift %1) (float-var cd)) 
        %1))))
 
-(defn repeating-comp [gob mod off comp]
-  (-> (create-from-components 
-       @POOL
-       gob
-       [comp
-        default-ground-motion
-        trigger-collider])
-      (repeat-trigger mod 0.5 0.5 4 off)
-      (add-spawntrigger)))
-
 (def ambient-shake (new-ambient-shake))
 
 (defn new-ambient-shake [] (let [cs (ScriptableObject/CreateInstance "CameraShake")]
@@ -108,7 +103,7 @@
     (set! (.Noise cs) (enum-val CameraShake+NoiseType "Perlin"))
     (set! (.RotateExtents cs) (v3 0.1 0.1 0.1))
     (set! (.MoveExtents cs) (v3 0.5 0.5 0.5))
-    (set! (.Speed cs) (float 0.25))
+    (set! (.Speed cs) (float (+ 0.25 (* 0.5 gamespeed))))
     (set! (.Duration cs) (float -1))
     cs))
 
@@ -117,20 +112,41 @@
   [(SpawnComp. CameraShakeOnCollision #(do (set! (.CameraShake %1) cs))) 
    (SpawnComp. StopCameraShakeOnCollision #(do (set! (.CameraShake %1) cs)))]))
 
+(def firevfx (Resources/Load "VFX/Fire"))
+(def rainvfx (Resources/Load "VFX/Rain"))
+(def clearvfx nil)
+
+(defn vfx-oncol [vfx]
+  (SpawnComp. VFXOnCollision #(do (set! (.Asset %1) vfx))))
+
+(defn clearvfx-oncol [] (SpawnComp. VFXOnCollision #(do %1)))
+
+(rainvfx-oncol)
+
 (.Play (cmpt (object-named "Camera") CameraShakeManager) ambient-shake)
 (.Stop (cmpt (object-named "Camera") CameraShakeManager) ambient-shake false)
 (.StopAll (cmpt (object-named "Camera") CameraShakeManager) false)
 
+(oneshot-comp (create-primitive :cube) [(vfx-oncol firevfx)] (v3 0.5 0.5 4))
+(oneshot-comp (create-primitive :sphere) [(vfx-oncol rainvfx)] (v3 0.5 0.5 4))
+
+(clear-spawner)
+
+(instantiate (create-ground-col-with @POOL (create-primitive :cube) ) )
+(instantiate (create-ground-col-with @POOL (create-primitive :cube) [(vfx-oncol clearvfx)]) (v3 0.5 0.5 4))
+
+(destroy (object-named "Sphere"))
+
 (do
   (clear-pool)
   (clear-spawner)
+  (repeating-comp (create-primitive :cube) 4 1 (glitch-oncol 0.2 0.2 0 0.2))
   (repeating-comp (create-primitive :cube) 4 1 (glitch-oncol 0.2 0.2 0 0.2))
   (repeating-comp (create-primitive :cube) 4 0 (glitch-oncol 0 0.05 0 0))
   (let [cs (camerashake-oncol)]
     (repeating-comp (create-primitive :sphere) 16 8 (first cs))
     (repeating-comp (create-primitive :sphere) 16 0 (last cs))))
 
-(destroy (object-named "Cube"))
 
 
 (let 
