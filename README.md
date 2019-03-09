@@ -10,9 +10,7 @@
 > As dreams are made on, and our little life \
 > Is rounded with a sleep.
 
-##### Prospero
-##### **Shakespeare**
-##### *The Tempest* (Act 4, Scene 1)
+\- Prospero, **Shakespeare**, *The Tempest* (Act 4, Scene 1)
 
 ---------------------------
 
