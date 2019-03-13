@@ -4,13 +4,17 @@
    arcadia.linear
    tween.core
    hard.core
-   game.spawner)
+   game.spawner
+   game.utils
+   game.cam
+   game.actions
+   game.palette)
   (:import [UnityEngine Physics
             GameObject Input
             Vector2 Mathf Resources Transform
             PrimitiveType Collider Light Renderer
-            Color]
-           [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
+            Color Mathf Application Debug]
+           [UnityEngine.Experimental.VFX VisualEffect]
            RoadSpawner
            SlowPlayerOnCollision
            RepeatingSpawnTrigger
@@ -22,7 +26,6 @@
            GroundMotion
            SpawnInfo
            FloatVariable
-           GlitchOnCollision
            CameraShakeOnCollision
            StopCameraShakeOnCollision
            CameraShake
@@ -31,196 +34,264 @@
            CameraShake+NoiseType
            DestroyAfterPosition
            VFXOnCollision
+           Invert
            [game.spawner SpawnComp]))
 
+(use 'game.actions :reload)
+(use 'game.cam :reload)
+
 (use 'game.spawner :reload)
+(use 'game.palette :reload)
 
+(remove-ns 'game.road)
+
+; setup
+(do
+
+  (deftween [:lookatrotation] [this]
+    {:get (.rotationOffset this)
+     :tag UnityEngine.Vector3})
+
+  (def cam1 {:rotation (v3 -13 16 -1) :position (v3 0.6 0.47 3.52)})
+  (def cam2 {:rotation (v3 -15 -28 13.1) :position (v3 -0.11 2.49 -4.03)})
+  (def firevfx (Resources/Load "VFX/Fire"))
+  (def rainvfx (Resources/Load "VFX/Rain"))
+  (def clearvfx nil)
+  (defn vfx-oncol [vfx]
+    (SpawnComp. VFXOnCollision #(do (set! (.Asset %1) vfx))))
+  (defn color-to-v4 [col]
+    (v4 (.r col) (.g col) (.b col) (.a col)))
+  (defn v3-to-v4 [vec z]
+    (v4 (.x vec) (.y vec) (.z vec) (.a vec)))
+  )
+
+(speed 1)
+(clear-triggers)
+
+(def globalpal buddhist)
+
+(speed 0.8)
+
+(oneshot 
+ (spawnable 
+  (cube 0.2) 
+  {:destroy destroy-on-trigger-player-role}
+  [(glitch-oncol 0 0)])
+ (v3 1.5 0.5 16))
+
+(oneshot 
+ (spawnable 
+  (create-glow-light 0) 
+  {:togglelights (toggle-lights-role 1 4 40 globalpal 0.123)} 
+  [trigger-collider]) 
+ (v3 1.5 0.5 2))
+
+(toggle-trigger :invert
+  (repeat-trigger 
+    (spawnable 
+      (cube 4 0.2 0.2) 
+      {:invert-toggle invert-toggle-role 
+       :slowplayer (slowplayer-role 0.33) 
+       :destroy destroy-on-trigger-player-role} 
+      []) 
+    [(trigger-setpos (v3 0 0.5 16))]
+    16 0))
+
+
+(toggle-trigger 
+ :dust
+  (repeat-trigger
+   (spawnable 
+    (cube 0.2) 
+    {:spawnvfxtoggle spawn-vfx-toggle-role} 
+    [(spawned-vfx-comp (color-to-v4 Color/red))])
+   [(trigger-setpos (v3 1.5 0.5 1))
+    (fn [gob gstate]
+      (let [vfxcmpt (cmpt gob VisualEffect)]
+        (set! (.visualEffectAsset vfxcmpt) (Resources/Load "VFX/SpawnImpulse"))
+        (.SetVector4 vfxcmpt "Color" (palette-lerp globalpal (gpos-mod gstate 0.123 1 1)))))]
+   16 12))
+
+(toggle-trigger 
+ :cam2
+ (repeat-trigger 
+  (spawnable (cube 0.8) 
+             {:movecam (movecam-role cam2 1) 
+              :destroy destroy-on-trigger-player-role} [])
+  [(trigger-setpos (v3 1.5 0.5 4))]
+  64 32))
+
+(toggle-trigger 
+ :cam1
+ (repeat-trigger 
+  (spawnable (cube 0.8) 
+             {:movecam (movecam-role cam1 1) 
+              :destroy destroy-on-trigger-player-role} [])
+  [(trigger-setpos (v3 1.5 0.5 4))]
+  64 0))
+
+(palette-lerp globalpal 0.4)
+
+(speed 0.2)
+
+(movecam cam1 1)
+
+(* 4 (Mathf/Cos (* (.RuntimeValue (:gpos %)) 0.2))) (* 4 (Mathf/Sin ((.RuntimeValue (:gpos %)) 0.2))) 
+
+(Mathf/Cos 0.2)
+
+(destroy (object-named "GlowLight(Clone)"))
+
+
+; useful stuff
+(clear-pool)
+
+(speed 1)
+(movecam cam2 2)
+
+(def ambient-shake (new-ambient-shake 0.33))
+(play-shake ambient-shake)
+
+(def impact-shake (new-impact-shake))
+(play-shake impact-shake)
+
+(stop-shake ambient-shake)
+(stop-all-shakes)
+
+(destroy (object-named "Sphere(Clone)"))
+(destroy (object-named "Sphere"))
+(destroy (object-named "GlowLight(Clone)"))
 (destroy (object-named "Cube"))
-
-(clear-pool)
-
-(clear-spawner)
-
-(defn speed [s]
-  (let [bpmspeed (Resources/Load "ScriptableObjects/Variables/BPMSpeed")]
-    (set! (.SliderValue bpmspeed) (float s))
-    (.OnValidate bpmspeed))
-  (def gamespeed s))
-
-(speed 0.3)
-
-(defn create-glow-light [parent col lumens]
-  (let [gob (create-from-components
-             parent (GameObject/Instantiate (Resources/Load "Prefabs/GlowLight"))
-             [(SpawnComp. DestroyAfterPosition identity)
-              default-ground-motion])
-        light (cmpt (first (children gob)) Light)
-        hdlight (cmpt (first (children gob)) HDAdditionalLightData)
-        mat (.material (cmpt gob Renderer))]
-    (set! (.color light) col)
-    (set! (.intensity hdlight) lumens)
-    (.SetColor mat "_Color" col)
-    (.SetFloat mat "_Lumens" lumens)
-    gob))
-
-(clear-pool)
-
-(defn repeating [go w pos]
-  (timeline* 
-   :loop
-   (wait w)
-   #(do (instantiate go pos) nil)))
-
-(clear-cloned!)
-
-(repeating)
-
-(destroy! (mono-obj))
-(timeline* :loop #(log "hi") (wait 0.2))
-
-(repeating (create-glow-light @POOL (Color/cyan) (float 60)) 1 (v3 -0.5 1 4))
-
-(-> (create-empty :))
-
-(defn glitch-oncol 
-  ([sl] (glitch-oncol sl 0 0 0))
-  ([sl vj] (glitch-oncol sl vj 0 0))
-  ([sl vj hs] (glitch-oncol sl vj hs 0))
-  ([sl vj hs cd] 
-   (SpawnComp. 
-    GlitchOnCollision 
-    #(do
-       (set! (.ScanLine %1) (float-var sl)) 
-       (set! (.VerticalJump %1) (float-var vj)) 
-       (set! (.HorizontalShake %1) (float-var hs)) 
-       (set! (.ColorDrift %1) (float-var cd)) 
-       %1))))
-
-(def ambient-shake (new-ambient-shake))
-
-(defn new-ambient-shake [] (let [cs (ScriptableObject/CreateInstance "CameraShake")]
-    (set! (.Shake cs) (enum-val CameraShake+ShakeType "Constant"))
-    (set! (.Noise cs) (enum-val CameraShake+NoiseType "Perlin"))
-    (set! (.RotateExtents cs) (v3 0.1 0.1 0.1))
-    (set! (.MoveExtents cs) (v3 0.5 0.5 0.5))
-    (set! (.Speed cs) (float (+ 0.25 (* 0.5 gamespeed))))
-    (set! (.Duration cs) (float -1))
-    cs))
-
-(defn camerashake-oncol []
-  (let [cs (new-ambient-shake)]
-  [(SpawnComp. CameraShakeOnCollision #(do (set! (.CameraShake %1) cs))) 
-   (SpawnComp. StopCameraShakeOnCollision #(do (set! (.CameraShake %1) cs)))]))
-
-(def firevfx (Resources/Load "VFX/Fire"))
-(def rainvfx (Resources/Load "VFX/Rain"))
-(def clearvfx nil)
-
-(defn vfx-oncol [vfx]
-  (SpawnComp. VFXOnCollision #(do (set! (.Asset %1) vfx))))
+(destroy (object-named "Cube(Clone)"))
 
 (defn clearvfx-oncol [] (SpawnComp. VFXOnCollision #(do %1)))
 
 (rainvfx-oncol)
 
-(.Play (cmpt (object-named "Camera") CameraShakeManager) ambient-shake)
-(.Stop (cmpt (object-named "Camera") CameraShakeManager) ambient-shake false)
-(.StopAll (cmpt (object-named "Camera") CameraShakeManager) false)
+(set! (.visualEffectAsset (cmpt (object-named "PlayerVFX") VisualEffect)) (Resources/Load "VFX/PlayerParticles"))
 
 (oneshot-comp (create-primitive :cube) [(vfx-oncol firevfx)] (v3 0.5 0.5 4))
 (oneshot-comp (create-primitive :sphere) [(vfx-oncol rainvfx)] (v3 0.5 0.5 4))
+
+(oneshot-trigger-enter )
 
 (clear-spawner)
 
 (instantiate (create-ground-col-with @POOL (create-primitive :cube) ) )
 (instantiate (create-ground-col-with @POOL (create-primitive :cube) [(vfx-oncol clearvfx)]) (v3 0.5 0.5 4))
 
-(destroy (object-named "Sphere"))
+(destroy (object-named "GlowLight(Clone)"))
+
+
+
+(stop-all-shakes)
+
+; next I'll make this into a roles sytem instead of the hodgepodge now
+; it'll let us add roles but also ensure components like colliders
+
+(defn oneshot-trigger-enter [obj f pos]
+  (oneshot-comp (do (hook+ obj :on-trigger-enter :k f) obj) 
+                [(SpawnComp. DestroyAfterPosition #(set! (.zPos %) -7))
+                (SpawnComp. Collider #(set! (.isTrigger %) true))] pos))
+
+; e.g. role we want. state is on the spawned object
+; actually let's do something with state
+; Ugh, docs are wrong here
+{:state {:cam cam1 :duration 2} :on-trigger-enter #'movecam-ontrigger}
+
+; Gotta run get dinner, thanks for watching!
+
+(use 'game.actions :reload)
+
+(defn movecam-mod [{:keys [cam duration]}]
+    (timeline* (tween {:lookatrotation (cam :rotation)} (cmpt @CAMPAR LookAtConstraint) duration {:in pow3}))
+    (timeline* (tween {:local {:position (cam :position)}} @CAMPAR duration {:in pow3})))
+
+(defn movecam-ontrigger [obj k col]
+  (when-player col #(movecam (state obj k))))
+
+(defn movecam-ontriggerrole [cam duration]
+  {:state {:cam cam :duration duration} :on-trigger-enter #'movecam-ontrigger})
+
+; not sure if this will work with def instead of defn
+
+
+(destroy "Cube (Clone)")
+
+(oneshot (spawnable (cube 0.2) {:move-cam (movecam-ontriggerrole cam2 1)} []) (v3 1.5 0.5 4))
+
+
+(destroy (object-named "Cube(Clone)"))
+
+(oneshot-trigger-enter (cube 0.2) #'player-vfx-toggle-oncol (v3 1.5 0.5 4))
+(oneshot-trigger-enter (cube 0.2) #'invert-on-collision (v3 1.5 0.5 4))
+(oneshot-trigger-enter (let [c (cube 0.2)] (state+ c :cam-move cam1) (state+ c :cam-dur 0.3) c) #'movecam-oncol (v3 1.5 0.5 4))
+
+
+; 1. How it is now - spawner has a list that it checks in on in update
+; 2. spawner has a list with each spawntrigger activated in update Each spawntrigger does its own spawning - more feasible with functional programming
+;   Problem: defrecord doesn't have methods
+;   Solution: defprotocol? just pass functions?
+; 3. gameobject with each spawntrigger having an update state - difficult because method has to be its own defn
+
+
+(speed 0.2)
+
+(update-state (cljspawner) :spawner #(assoc % :triggers (conj (% :triggers) (repeat-trigger-rec (spawnable (cube 0.2) {:invert-toggle inverttoggle-role} []) (constantly (v3 1 1 4)) 4 0))))
+
+(update-state (cljspawner) :spawner #(assoc % :triggers []))
+
+(def rpt (RepeatTrigger. (spawnable (cube 0.2) {:invert-toggle inverttoggle-role} []) (constantly (v3 1 1 4)) 4 0))
+
+(spawn rpt 4 2)
+
+
+
+(spawn (SpawnTriggerImpl. 0))
+
+
+
+(filter identity (map #(spawn % pos speed) triggers))
+
+
+
+(destroy (cljspawner))
+
+
+
+
+        List<SpawnTrigger> removes = new List<SpawnTrigger>();
+        foreach(SpawnTrigger st in SpawnTriggers) {
+            Optional<SpawnInfo> spawn = st.Spawn();
+            if(!spawn.isNothing) {
+                SpawnInfo si = spawn.value;
+                GameObject instantiated = 
+                    Instantiate(
+                        si.Prefab, 
+                        new Vector3(si.xOffset, si.yOffset, 4f), 
+                        Quaternion.identity
+                    );
+                if(st.oneshot) {
+                    removes.Add(st);
+                }
+            }
+        }
+
+        foreach(SpawnTrigger rem in removes) {
+            SpawnTriggers.Remove(rem);
+        }
+
+        bool shouldSpawn = (Position.RuntimeValue + Offset) % BeatMod < (lastPosition + Offset) % BeatMod;
+        lastPosition = Position.RuntimeValue;
+        return shouldSpawn ? Optional<SpawnInfo>.of(spawnInfo) : Optional<SpawnInfo>.none();
 
 (do
   (clear-pool)
   (clear-spawner)
-  (repeating-comp (create-primitive :cube) 4 1 (glitch-oncol 0.2 0.2 0 0.2))
-  (repeating-comp (create-primitive :cube) 4 1 (glitch-oncol 0.2 0.2 0 0.2))
-  (repeating-comp (create-primitive :cube) 4 0 (glitch-oncol 0 0.05 0 0))
-  (let [cs (camerashake-oncol)]
-    (repeating-comp (create-primitive :sphere) 16 8 (first cs))
-    (repeating-comp (create-primitive :sphere) 16 0 (last cs))))
-
-
-
-(let 
-  [ sphere (create-ground-explode-sphere) 
-    spawnInfo (create-spawn-info sphere)
-    spawnTrigger (create-repeating spawnInfo 16)
-  ]
-  (.. @SPAWNER SpawnTriggers
-    (Add spawnTrigger))
+  (repeating 
+  (create-glow-light Color/cyan 400) 
+  (v3 4 2 8) 8 0)
+  (repeating 
+  (create-glow-light Color/red 400) 
+  (v3 -4 2 8) 8 4)
   )
-
-(clear-spawner)
-(clear-pool)
-
-
-(let [sphere (create-primitive :sphere)]
-  ; (.name sphere "exploding")
-  (parent! sphere @POOL))
-
-(destroy (object-named "Sphere(Clone)"))
-(destroy (object-named "Sphere"))
-
-
-; (defonce CLONED (atom []))
-
-; (defn resource [s] (UnityEngine.Resources/Load s))
-
-; (defn clear-cloned! []
-;   (dorun (map retire @CLONED))
-;   (reset! CLONED []))
-
-; (defmacro clone! [kw]
-;   (if (keyword? kw)
-;     (let [source (clojure.string/replace (subs (str kw) 1) #"[:]" "/")]
-;       `(let [^UnityEngine.GameObject source# (~'UnityEngine.Resources/Load ~source)
-;              ^UnityEngine.GameObject gob# (~'UnityEngine.GameObject/Instantiate source#)]
-;          (~'set! (.name gob#) (.name source#))
-;          (swap! ~'CLONED #(cons gob# %))
-;          gob#))
-;     `(-clone! ~kw)))
-
-; (defn ^UnityEngine.GameObject -clone!
-;   ([ref] (-clone! ref nil))
-;   ([ref pos]
-;      (when-let [^UnityEngine.GameObject source
-;                 (cond  (string? ref)  (resource ref)
-;                        (keyword? ref) (resource (clojure.string/replace (subs (str ref) 1) #"[:]" "/"))
-;                        :else nil)]
-
-;        (let [pos   (or pos (.position (.transform source)))
-;              quat  (.rotation (.transform source))
-;              ^UnityEngine.GameObject gob   (arcadia.core/instantiate source pos quat)]
-;          (set! (.name gob) (.name source))
-;          (swap! CLONED #(cons gob %)) gob))))
-
-
-
-
-
-;; (defn rm-obj []
-;;   (.. (cmpt (object-named "Spawner") Spawner) SpawnTriggers
-;;       (Remove (Resources/Load "ScriptableObjects/SpawnTriggers/Cube")))
-
-; (defn start-game [])
-
-; (start-game)
-
-
-; (defn create-ground-explode-sphere []
-;   (let [sphere (create-primitive :sphere)]
-;     (set! (.name sphere) "exploding")
-;     (parent! sphere @POOL)
-;     (add-components sphere [ExplodeOnCollision GroundMotion])
-;     (set-defaults sphere)
-;     (let [col (.GetComponent sphere "Collider")]
-;       (set! (.isTrigger col) true))
-;     sphere))

@@ -5,13 +5,15 @@ using UnityEngine;
 
 public class DestroyAfterPosition : MonoBehaviour
 {
+    public float zPos;
     public void Start(){
 
     }
 
     public void Update() {
-        if(transform.position.z < -3) {
+        if(transform.position.z < zPos) {
             Destroy(gameObject);
         }
+
     }
 }

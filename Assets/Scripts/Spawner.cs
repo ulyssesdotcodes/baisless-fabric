@@ -9,10 +9,7 @@ public class Spawner : MonoBehaviour
     [SerializeField] public List<SpawnTrigger> SpawnTriggers;
     public GameObject Pool;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
+    void Start() { }
 
     // Update is called once per frame
     void Update()
