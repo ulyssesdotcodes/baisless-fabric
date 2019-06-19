@@ -1,13 +1,13 @@
 (ns game.actions
   (use arcadia.core arcadia.linear game.spawner game.cam game.palette tween.core)
   (:import
-   [UnityEngine Resources Color Light Renderer Vector4]
+   [UnityEngine Resources Color Light Renderer Vector4 GameObject]
    [UnityEngine.Animations LookAtConstraint]
    [UnityEngine.Experimental.VFX VisualEffect]
    [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
    [UnityEngine.Rendering.PostProcessing
     PostProcessManager
-    PostProcessLayer
+    PostProcessLayer PostProcessVolume 
     PostProcessVolume]
    Invert
    GlitchOnCollision
@@ -17,8 +17,7 @@
 (defn play-impact [obj k col] (when-player col #(play-shake (new-impact-shake))))
 
 (defn invert-on-collision [obj k col] 
-  (let [profile (.. PostProcessManager instance
-                  (GetHighestPriorityVolume (cmpt (.. Camera main gameObject) PostProcessLayer)) profile)
+  (let [profile (.profile (cmpt (GameObject/FindGameObjectWithTag "Volume") PostProcessVolume))
         settings (->> (.settings profile) (filter (comp #(= Invert %) #(.GetType %))) (first))]
     (when-player col #(set! (.. settings invert value) (Mathf/Abs (- (.. settings invert value) (float 1)))))))
 
@@ -100,6 +99,12 @@
   (when-player col #(.OnSlow (cmpt (.gameObject col) CharacterControl) ((state obj k) :amount))))
 
 (defn slowplayer-role [amt] {:state {:amount amt} :on-trigger-enter #'slowplayer-on-trigger-enter})
+
+(defn jumpover-on-trigger-enter [obj k col]
+  (when-player col #(.OnJumpOver (cmpt (.gameObject col) CharacterControl))))
+
+(defn jumpover-role [] {:state {} :on-trigger-enter #'jumpover-on-trigger-enter})
+
 
 (defn spawned-vfx-comp [^Vector4 color]
   (SpawnComp. 

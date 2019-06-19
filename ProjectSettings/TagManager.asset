@@ -6,6 +6,7 @@ TagManager:
   tags:
   - VFX
   - spot
+  - Volume
   layers:
   - Default
   - TransparentFX

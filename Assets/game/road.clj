@@ -14,7 +14,7 @@
             Vector2 Mathf Resources Transform
             PrimitiveType Collider Light Renderer
             Color Mathf Application Debug]
-           [UnityEngine.Experimental.VFX VisualEffect]
+
            RoadSpawner
            SlowPlayerOnCollision
            RepeatingSpawnTrigger
@@ -30,6 +30,7 @@
            StopCameraShakeOnCollision
            CameraShake
            CameraShakeManager
+           VisualEffect
            CameraShake+ShakeType
            CameraShake+NoiseType
            DestroyAfterPosition
@@ -52,8 +53,9 @@
     {:get (.rotationOffset this)
      :tag UnityEngine.Vector3})
 
-  (def cam1 {:rotation (v3 -13 16 -1) :position (v3 0.6 0.47 3.52)})
-  (def cam2 {:rotation (v3 -15 -28 13.1) :position (v3 -0.11 2.49 -4.03)})
+  (def cam1 {:rotation (v3 -10 16 -1) :position (v3 0.6 0.47 3.52)})
+  (def cam2 {:rotation (v3 -5 -28 13.1) :position (v3 -0.11 2.49 -4.03)})
+  (def cam3 {:rotation (v3 -5 -28 19.1) :position (v3 -0.11 2.49 -10.03)})
   (def firevfx (Resources/Load "VFX/Fire"))
   (def rainvfx (Resources/Load "VFX/Rain"))
   (def clearvfx nil)
@@ -65,26 +67,102 @@
     (v4 (.x vec) (.y vec) (.z vec) (.a vec)))
   )
 
-(speed 1)
+(speed 3)
 (clear-triggers)
+
+(movecam cam2 0.5)
 
 (def globalpal buddhist)
 
-(speed 0.8)
+(speed 2)
 
-(oneshot 
- (spawnable 
-  (cube 0.2) 
+(toggle-trigger
+ :glitchoff
+ (repeat-trigger
+  (spawnable
+   (cube 0.2)
+   {:destroy destroy-on-trigger-player-role}
+   [(glitch-oncol 0.2 0)])
+  [(trigger-setpos (v3 1.5 0.5 8))] 2 1))
+
+(toggle-trigger
+ :glitchon
+ (repeat-trigger
+  (spawnable
+   (cube 0.2)
+   {:destroy destroy-on-trigger-player-role}
+   [(glitch-oncol 0.2 0.5 2 3)])
+  [(trigger-setpos (v3 1.5 0.5 8))] 2 1))
+
+(toggle-trigger :glitch
+(repeat-trigger
+ (spawnable
+  (cube 0.2)
   {:destroy destroy-on-trigger-player-role}
-  [(glitch-oncol 0 0)])
- (v3 1.5 0.5 16))
+  [(glitch-oncol 0.5 2)])
+ (v3 1.5 0.5 4) 8 0
+))
+
+(toggle-trigger :lights
+(repeat-trigger
+ (spawnable
+  (create-glow-light 120)
+  {:togglelights (toggle-lights-role 0.5 4 120 globalpal 0.123)}
+  [trigger-collider])
+ [(trigger-setpos (v3 1.5 0.5 8))] 4 0))
 
 (oneshot 
  (spawnable 
-  (create-glow-light 0) 
-  {:togglelights (toggle-lights-role 1 4 40 globalpal 0.123)} 
+  (create-glow-light 120) 
+  {:togglelights (toggle-lights-role 2 4 40 globalpal 0.25)} 
   [trigger-collider]) 
  (v3 1.5 0.5 2))
+
+(oneshot 
+ (spawnable 
+  (cube 0.3) 
+  {:togglevfx (toggle-lights-role 2 4 40 globalpal 0.25)} 
+  [trigger-collider]) 
+ (v3 1.5 0.5 2))
+
+(oneshot
+    (spawnable 
+      (cube 4 0.2 0.2) 
+      {:invert-toggle invert-toggle-role 
+       :slowplayer (slowplayer-role 0.33) 
+       :destroy destroy-on-trigger-player-role} 
+      []) 
+    (v3 0 0.5 16))
+
+(oneshot
+    (spawnable 
+      (cube 4 0.2 0.2) 
+      {:jumpover (jumpover-role) 
+       :destroy destroy-on-trigger-player-role} 
+      []) 
+    (v3 0 0.5 16))
+
+(toggle-trigger
+  :jump
+  (repeat-trigger
+   (spawnable 
+    (cube 4 0.2 0.2) 
+    {:jumpover (jumpover-role) 
+     :destroy destroy-on-trigger-player-role} 
+    []) 
+   [(trigger-setpos (v3 0 0.5 8))]
+   16 0))
+
+(toggle-trigger
+ :invert
+ (repeat-trigger
+  (spawnable
+    (cube 4 0.2 0.2)
+    {:invert-toggle invert-toggle-role
+    :destroy destroy-on-trigger-player-role}
+    [])
+  [(trigger-setpos (v3 0 0.5 8))]
+  2 0))
 
 (toggle-trigger :invert
   (repeat-trigger 
@@ -94,8 +172,23 @@
        :slowplayer (slowplayer-role 0.33) 
        :destroy destroy-on-trigger-player-role} 
       []) 
-    [(trigger-setpos (v3 0 0.5 16))]
-    16 0))
+    [(trigger-setpos (v3 0 0.5 8))]
+    16 8))
+
+(oneshot
+ (spawnable 
+  (cube 0.4) 
+  {:player-vfx {:on-trigger-enter #'player-vfx-toggle-oncol}}
+  [])
+ (v3 1.5 0.5 4))
+
+(oneshot 
+ (spawnable (create-primitive :sphere) {} [(vfx-oncol firevfx)]) 
+ (v3 1.5 0.5 4))
+
+(movecam cam1 3)
+(movecam cam2 2)
+(movecam cam3 2)
 
 
 (toggle-trigger 
@@ -105,12 +198,12 @@
     (cube 0.2) 
     {:spawnvfxtoggle spawn-vfx-toggle-role} 
     [(spawned-vfx-comp (color-to-v4 Color/red))])
-   [(trigger-setpos (v3 1.5 0.5 1))
+   [(trigger-setpos (v3 1.5 0.5 8))
     (fn [gob gstate]
       (let [vfxcmpt (cmpt gob VisualEffect)]
         (set! (.visualEffectAsset vfxcmpt) (Resources/Load "VFX/SpawnImpulse"))
-        (.SetVector4 vfxcmpt "Color" (palette-lerp globalpal (gpos-mod gstate 0.123 1 1)))))]
-   16 12))
+        (.SetVector4 vfxcmpt "Color" (palette-lerp globalpal (gpos-mod gstate 0.4 1 1)))))]
+   32 0))
 
 (toggle-trigger 
  :cam2
@@ -119,7 +212,7 @@
              {:movecam (movecam-role cam2 1) 
               :destroy destroy-on-trigger-player-role} [])
   [(trigger-setpos (v3 1.5 0.5 4))]
-  64 32))
+  16 8))
 
 (toggle-trigger 
  :cam1
@@ -128,7 +221,13 @@
              {:movecam (movecam-role cam1 1) 
               :destroy destroy-on-trigger-player-role} [])
   [(trigger-setpos (v3 1.5 0.5 4))]
-  64 0))
+  16 8))
+
+ (oneshot
+  (spawnable (cube 0.8) 
+             {:movecam (movecam-role cam1 1) 
+              :destroy destroy-on-trigger-player-role} [])
+  (v3 1.5 0.5 8))
 
 (palette-lerp globalpal 0.4)
 
@@ -171,7 +270,6 @@
 (set! (.visualEffectAsset (cmpt (object-named "PlayerVFX") VisualEffect)) (Resources/Load "VFX/PlayerParticles"))
 
 (oneshot-comp (create-primitive :cube) [(vfx-oncol firevfx)] (v3 0.5 0.5 4))
-(oneshot-comp (create-primitive :sphere) [(vfx-oncol rainvfx)] (v3 0.5 0.5 4))
 
 (oneshot-trigger-enter )
 
@@ -219,6 +317,8 @@
 (destroy "Cube (Clone)")
 
 (oneshot (spawnable (cube 0.2) {:move-cam (movecam-ontriggerrole cam2 1)} []) (v3 1.5 0.5 4))
+
+(oneshot (spawnable (cube 0.3)) [(vfx-oncol firevfx)] (v3 0.5 0.5 4))
 
 
 (destroy (object-named "Cube(Clone)"))

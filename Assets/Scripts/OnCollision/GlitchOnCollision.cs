@@ -23,7 +23,7 @@ public class GlitchOnCollision : MonoBehaviour
             return;
         }
 
-        PostProcessVolume layer = PostProcessManager.instance.GetHighestPriorityVolume(Camera.main.GetComponent<PostProcessLayer>());
+        PostProcessVolume layer = GameObject.FindGameObjectWithTag("Volume").GetComponent<PostProcessVolume>();
         Glitch settings = layer.profile.GetSetting<Glitch>();
         settings.scanLine.value = ScanLine.RuntimeValue;
         settings.verticalJump.value = VerticalJump.RuntimeValue;
