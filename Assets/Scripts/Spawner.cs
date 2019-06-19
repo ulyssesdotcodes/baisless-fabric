@@ -7,11 +7,9 @@ public class Spawner : MonoBehaviour
 {
     [SerializeField] Ground Ground;
     [SerializeField] public List<SpawnTrigger> SpawnTriggers;
+    public GameObject Pool;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
+    void Start() { }
 
     // Update is called once per frame
     void Update()
@@ -26,10 +24,13 @@ public class Spawner : MonoBehaviour
             Optional<SpawnInfo> spawn = st.Spawn();
             if(!spawn.isNothing) {
                 SpawnInfo si = spawn.value;
-                GameObject instantiated = Instantiate(si.Prefab, new Vector3(0, si.yOffset, 4f), Quaternion.identity);
-                foreach(OnCollisionParams onCollision in si.OnCollisionParams) {
-                    onCollision.AddComponent(instantiated);
-                }
+                GameObject instantiated = 
+                    Instantiate(
+                        si.Prefab, 
+                        new Vector3(si.xOffset, si.yOffset, si.zOffset), 
+                        Quaternion.identity
+                    );
+
                 if(st.oneshot) {
                     removes.Add(st);
                 }

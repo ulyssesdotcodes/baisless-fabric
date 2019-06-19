@@ -246,6 +246,11 @@ public class CharacterControl : MonoBehaviour
         mAnimTween = StartCoroutine(AnimateToggle("Stumble", -1, 0, 0.92f));
     }
 
+    public void OnJumpOver() {
+        if(mAnimTween != null) StopCoroutine(mAnimTween);
+        mAnimTween = StartCoroutine(AnimateToggleBool("Jump", 0.92f));
+    }
+
     private IEnumerator AnimateTween(string param, float alphaStart, float alphaFinish, float time) {
         float elapsedTime = 0;
         m_Animator.SetFloat(param, alphaStart);
@@ -264,5 +269,11 @@ public class CharacterControl : MonoBehaviour
         m_Animator.SetFloat(param, alphaStart);
         yield return new WaitForSeconds(time);
         m_Animator.SetFloat(param, alphaFinish);
+    }
+
+    private IEnumerator AnimateToggleBool(string param, float time) {
+        m_Animator.SetBool(param, true);
+        yield return new WaitForSeconds(time);
+        m_Animator.SetBool(param, false);
     }
 }

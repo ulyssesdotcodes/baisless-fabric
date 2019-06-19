@@ -9,8 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: Spot0toggle
-  m_EditorClassIdentifier: Assembly-CSharp::SpotLumensOnCollisionParams
-  lumens: 0
+  m_Script: {fileID: 11500000, guid: 38811008ceeacbd48a883f3dac9d48ec, type: 3}
+  m_Name: Spot0Toggle
+  m_EditorClassIdentifier: 
   index: 0

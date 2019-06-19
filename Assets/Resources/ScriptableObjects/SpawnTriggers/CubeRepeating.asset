@@ -12,13 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87fc1c8c966406349bd49b96f7ddfb41, type: 3}
   m_Name: CubeRepeating
   m_EditorClassIdentifier: 
-  yOffset: 1.17
-  Prefab: {fileID: 1315740946472911242, guid: 500b3b07990af41ef92c08d7d5d50f22, type: 3}
-  OnCollisionParams:
-  - {fileID: 11400000, guid: 39e873a1003882343a1556fde3ca8cae, type: 2}
-  - {fileID: 11400000, guid: d52bb6fbcb95a454a9efd35201c40c65, type: 2}
-  - {fileID: 11400000, guid: 953a9c9780b1e704fa3b6da54c70f945, type: 2}
   oneshot: 0
   BeatMod: 8
   Offset: 0
   Position: {fileID: 11400000, guid: 5b969eccf5895439fb403a37e3f94bf3, type: 2}
+  spawnInfo:
+    yOffset: 1.17
+    Prefab: {fileID: 1315740946472911242, guid: 500b3b07990af41ef92c08d7d5d50f22,
+      type: 3}
+    OnCollisionParams:
+    - {fileID: 11400000, guid: 39e873a1003882343a1556fde3ca8cae, type: 2}
+    - {fileID: 11400000, guid: 90c27960cb20a9f44a418bcf1a92736d, type: 2}
+    - {fileID: 11400000, guid: d52bb6fbcb95a454a9efd35201c40c65, type: 2}

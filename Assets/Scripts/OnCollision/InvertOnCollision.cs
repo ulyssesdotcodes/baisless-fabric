@@ -11,7 +11,7 @@ public class InvertOnCollision : MonoBehaviour
             return;
         }
 
-        PostProcessVolume layer = PostProcessManager.instance.GetHighestPriorityVolume(Camera.main.GetComponent<PostProcessLayer>());
+        PostProcessVolume layer = GameObject.FindGameObjectWithTag("Volume").GetComponent<PostProcessVolume>();
         Invert settings = layer.profile.GetSetting<Invert>();
         settings.invert.value = Mathf.Abs(settings.invert.value - 1);
         Destroy(gameObject);

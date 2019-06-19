@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6537fc8b353ef41509e375f659c6ec26, type: 3}
   m_Name: BPMSpeed
   m_EditorClassIdentifier: 
-  InitialValue: 5.076
-  min: 60
+  min: 0
   max: 180
   mult: 0.033333335
-  SliderValue: 0.769
+  SliderValue: 0.561

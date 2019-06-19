@@ -9,7 +9,7 @@ public class VFXOnCollision : MonoBehaviour
     
     // Start is called before the first frame update
     [SerializeField]
-    VisualEffectAsset Asset;
+    public VisualEffectAsset Asset;
 
     [SerializeField] FloatVariable speed;
 

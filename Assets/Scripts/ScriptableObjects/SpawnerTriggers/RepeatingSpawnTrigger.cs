@@ -5,9 +5,9 @@ using UnityEngine;
 [CreateAssetMenu(menuName="SpawnTrigger/Repeating")]
 public class RepeatingSpawnTrigger : SpawnTrigger
 {
-    [SerializeField] float BeatMod = 0f;
-    [SerializeField] float Offset = 0f;
-    [SerializeField] FloatVariable Position;
+    public float BeatMod = 0f;
+    public float Offset = 0f;
+    public FloatVariable Position;
     public SpawnInfo spawnInfo;
     float lastPosition;
 

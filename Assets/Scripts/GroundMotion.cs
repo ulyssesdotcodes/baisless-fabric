@@ -23,9 +23,5 @@ public class GroundMotion : MonoBehaviour
         Vector3 newPos = new Vector3(transform.position.x, transform.position.y, transform.position.z - speed);
         transform.position = newPos;
         lastPosition = Position.RuntimeValue;
-
-        if(transform.position.z < -7) {
-            GameObject.Destroy(gameObject);
-        }
     }
 }
