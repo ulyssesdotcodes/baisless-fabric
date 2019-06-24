@@ -60,3 +60,11 @@ sysinfo.txt
 
 # Crashlytics generated file
 crashlytics-build.properties
+
+
+# Custom
+Assets/ML-Agents
+Assets/ML-Agents.meta
+Assets/Gizmos
+Assets/Gizmos.meta
+

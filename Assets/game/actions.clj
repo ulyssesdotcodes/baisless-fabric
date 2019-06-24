@@ -54,15 +54,15 @@
     (.SetColor mat "_Color" col)
     gob)))
 
-  (defn update-glowlight-color [color-fn]
-    (fn [gob gstate] 
-      (let [light (cmpt (first (children gob)) Light)
-            hdlight (cmpt (first (children gob)) HDAdditionalLightData)
-            mat (.material (cmpt gob Renderer))
-            newcol (Color/Lerp (Color/black) (v4-to-color (color-fn gstate)) 0.01)]
-        (set! (.color light) newcol)
-        (.SetColor mat "_Color" newcol)
-        gob)))
+(defn update-glowlight-color [color-fn]
+  (fn [gob gstate] 
+    (let [light (cmpt (first (children gob)) Light)
+          hdlight (cmpt (first (children gob)) HDAdditionalLightData)
+          mat (.material (cmpt gob Renderer))
+          newcol (Color/Lerp (Color/black) (v4-to-color (color-fn gstate)) 0.01)]
+      (set! (.color light) newcol)
+      (.SetColor mat "_Color" newcol)
+      gob)))
 
 (defn circlelights [gposmod lspeed lumens palette pspeed] 
   (repeat-trigger
