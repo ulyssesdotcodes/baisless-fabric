@@ -256,10 +256,6 @@
 
 
 (destroy (cljspawner))
-
-
-
-
         List<SpawnTrigger> removes = new List<SpawnTrigger>();
         foreach(SpawnTrigger st in SpawnTriggers) {
             Optional<SpawnInfo> spawn = st.Spawn();

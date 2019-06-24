@@ -4,43 +4,72 @@
             GameObject Input
             Vector2 Mathf Resources Transform
             PrimitiveType Collider Light Renderer
-            Color Application Debug Time Canvas]
+            Color Application Debug Time Canvas LightType
+            Quaternion]
            [UnityEngine.Experimental.VFX VisualEffect]
+           [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
            [UnityEngine.UI Text]
            RectTransformUtility))
 
 
-(create-primitive :sphere)
+;Atoms
 
 (def bfstate (atom {}))
 
 (def cljtimescale (atom 1))
-(defn cljtimescalef [] @cljtimescale)
-(defn time [] (* Time/time (cljtimescalef)))
 
-(defn settime [t] (reset! cljtimescale t))
-
-(settime 1)
-
-(time)
-
-(defn add-obj [n obj]
-  (swap! bfstate assoc n obj)
-  (title-follow n obj)
-  obj)
-
-(defn rem-obj [n]
-  (destroy! (@bfstate n))
-  (destroy! (@bfstate (str n "-title")))
-  (swap! bfstate dissoc n))
-
-(swap! bfstate assoc :names 
-    (let [obj (new GameObject "Names")
-          canvas (cmpt+ obj Canvas)]
-      (set! (.renderMode canvas) UnityEngine.RenderMode/ScreenSpaceOverlay)
-      obj))
 
 (swap! bfstate dissoc :names)
+
+
+(defn move-update [obj k]
+  (let [t (.transform obj)]
+    (set! (.position t) (v3 (mod (time) 4) 0.5 0))))
+
+(add-obj "Sphere" 
+    (let [sph (create-primitive :sphere)]
+    (role+ sph :movement {:state {} :update #'move-update})
+    sph))
+(rem-obj "Sphere")
+
+(swap! bfstate assoc :hi "hi")
+
+(deref bfstate)
+
+(add-obj :testobj (create-primitive :sphere))
+(rem-obj :testobj)
+
+(get DATA :testobj)
+
+(destroy! (get DATA :testobj))
+
+(add-obj 
+ "Spot" 
+ (roles+
+    (create-light LightType/Spot 800 (Color/red))
+    {:blink blink
+    })
+ (v3 0 8 0)
+ (v3 90 0 0))
+(rem-obj "Spot")
+
+
+; Lights
+
+(defrole blink
+  :state {:speed 0}
+  (update [obj k] ))
+
+(defn create-light 
+    ([^LightType type lumens ^Color color] 
+        (let [gobj (new GameObject)
+              light (cmpt+ gobj Light)
+              hdlight (cmpt+ gobj HDAdditionalLightData)]
+          (set! (.type light) type)
+          (set! (.intensity hdlight) lumens)
+          gobj)))
+
+; Text that follows an object
 
 (defn follow-update [roleobj k]
     (let [rolestate (state roleobj k)
@@ -65,22 +94,63 @@
     (swap! bfstate assoc (str title "-title") textobj)
     (role+ textobj :followobj (followobj-role obj))))
 
-(defn move-update [obj k]
-  (let [t (.transform obj)]
-    (set! (.position t) (v3 (mod (time) 4) 0.5 0))))
 
-(add-obj "Sphere" (let [sph (create-primitive :sphere)]
-                    (role+ :movement sph {:state {} :update #'move-update})
-                    sph))
-(rem-obj "Sphere")
+; Initial state
 
-(swap! bfstate assoc :hi "hi")
+(defn cljtimescalef [] @cljtimescale)
 
-(deref bfstate)
+(defn add-obj 
+  ([n obj]
+   (swap! bfstate assoc n obj)
+   (if (not (keyword? n)) 
+     (do (set! (.name obj) n) (title-follow n obj)) ())
+   obj)
+  ([n obj pos] 
+   (add-obj n obj) 
+   (position! obj pos))
+  ([n obj pos rot] 
+   (add-obj n obj pos) 
+   (rotation! obj (Quaternion/Euler (.x rot) (.y rot) (.z rot)))))
 
-(add-obj :testobj (create-primitive :sphere))
-(rem-obj :testobj)
+(defn rem-obj [n]
+  (destroy! (@bfstate n))
+;   (if (not (keyword? n)) (destroy! (@bfstate (str n "-title"))) ())
+  (swap! bfstate dissoc n))
 
-(get DATA :testobj)
+(swap! bfstate assoc :names 
+    (let [obj (new GameObject "Names")
+          canvas (cmpt+ obj Canvas)]
+      (set! (.renderMode canvas) UnityEngine.RenderMode/ScreenSpaceOverlay)
+      obj))
 
-(destroy! (get DATA :testobj))
+; time
+(defn settime [t] 
+  (update-state (@bfstate :timekeeper) :time #(assoc % :rate t)))
+
+(defn time []
+  ((state (@bfstate :timekeeper) :time) :time))
+
+(add-obj
+ :timekeeper
+ (let [tk (new GameObject)]
+   (role+ tk :time timekeeper-role)
+   tk))
+(rem-obj :timekeeper)
+
+(@bfstate :timekeeper)
+
+((state (@bfstate :timekeeper) :time) :time)
+
+(defrole timekeeper-role
+  :state {:time 0 :rate 1}
+  (update 
+   [obj k] 
+   (let [{:keys [:time :rate]} (state obj k)] 
+     (state+ obj k 
+             {:time (+ time (* Time/deltaTime rate)) 
+              :rate rate}))))
+
+(defn run-on-trigger [tmod toff f]
+  (let [t (time)
+        offset])
+  (when ))
