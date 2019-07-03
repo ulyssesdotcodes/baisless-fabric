@@ -1,5 +1,5 @@
 (ns game.spawner
-  (use arcadia.core arcadia.linear hard.core)
+  (use arcadia.core arcadia.linear hard.core game.core game.names)
   (:import [UnityEngine Physics
             GameObject Input
             Vector2 Mathf Resources Transform
@@ -11,6 +11,9 @@
            [UnityEngine.UI Text]
            RectTransformUtility))
 
+(use 'game.core)
+
+(bftime)
 
 ;Atoms
 
@@ -43,16 +46,46 @@
 
 (destroy! (get DATA :testobj))
 
+
+; this works
+(map #(add-personality % "Mover") (take 20 (repeatedly #(randomname))))
+(map #(add-personality % "Avoider") (take 10 (repeatedly #(randomname))))
+
+(doseq [[k v] @bfstate] (prn k)])
+
+(doseq [k (keys @bfstate)] (prn k)) 
+(doseq [k (keys @bfstate)] 
+  (when (not= (@bfstate k))(destroy! (@bfstate k))))
+
+
+
+(defn add-personality [name type]
+  (add-obj 
+    name
+    (instantiate (Resources/Load (str "Prefabs/Personalities/" type)))))
+
+(rem-obj "Karen")
+
 (add-obj 
- "Spot" 
- (roles+
-    (create-light LightType/Spot 800 (Color/red))
-    {:blink blink
-    })
+ "Silas"
+ (instantiate (Resources/Load "Prefabs/Personalities/Avoider")))
+
+(add-obj
+ "Spot"
+ (blink-light LightType/Spot 800 (Color/red) 2)
  (v3 0 8 0)
  (v3 90 0 0))
 (rem-obj "Spot")
 
+; vfx
+
+(defn add-fire [obj]
+  (let [vfxc (cmpt+ obj VisualEffect)]
+    (set! (.visualEffectAsset vfxc) (Resources/Load "VFX/Fire"))))
+
+; add timeout to trigger fall apart effect - fall apart effect triggers destroy
+; pare down to no lights? Gotta have something to fill it up
+; 
 
 ; Lights
 
