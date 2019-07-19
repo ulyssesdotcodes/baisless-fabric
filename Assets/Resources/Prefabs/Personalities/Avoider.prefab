@@ -137,7 +137,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d5bd67e62fd8ad14ba8d885fd35799cf, type: 2}
   - {fileID: 11400000, guid: 7516b40b230d0664493611f51c2f8167, type: 2}
   - {fileID: 11400000, guid: 3abc8abb80f1060458ca0e8f81c5f1b7, type: 2}
-  Rewards: []
+  Rewards:
+  - {fileID: 11400000, guid: 47ba4489b2b17c249ae37b11499be1b0, type: 2}
   Actions:
   - {fileID: 11400000, guid: 8abeec0846e99054eab27240ca9e99d6, type: 2}
 --- !u!114 &6753634464682523654

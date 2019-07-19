@@ -38,6 +38,8 @@ public class BaseAgent : Agent, IResettable {
             action.Initialize();
         }
 
+        Reset();
+
     }
 
     public override void CollectObservations() {

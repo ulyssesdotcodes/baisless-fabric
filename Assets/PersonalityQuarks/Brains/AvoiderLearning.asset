@@ -21,5 +21,5 @@ MonoBehaviour:
     - forward
     - turn
     vectorActionSpaceType: 1
-  model: {fileID: 5022602860645237092, guid: 97d6aa65e906a544abd7eecc2d6d150b, type: 3}
+  model: {fileID: 5022602860645237092, guid: d59a5c24e382d8442a4687efa9f019c9, type: 3}
   inferenceDevice: 0

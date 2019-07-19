@@ -16,6 +16,5 @@ public class VFXOnCollision : MonoBehaviour
     void OnTriggerEnter(Collider other){
         VisualEffect vfx = GameObject.FindGameObjectWithTag("VFX").GetComponent<VisualEffect>();
         vfx.visualEffectAsset = Asset;
-        Destroy(gameObject);
     }
 }

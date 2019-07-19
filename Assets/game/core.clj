@@ -25,7 +25,7 @@
           pos (v3 (.x followobjpos) (+ (.y followobjpos) 0.25) (.z followobjpos))
           screenPoint (.WorldToScreenPoint Camera/main pos)
           textcmpt (cmpt roleobj Text)
-          canvasRect (cmpt (@bfstate :names) UnityEngine.RectTransform)
+          canvasRect (cmpt (get-in @bfstate [:names :item]) UnityEngine.RectTransform)
           point Vector2/zero]
       (UnityEngine.RectTransformUtility/ScreenPointToLocalPointInRectangle canvasRect (v2 (.x screenPoint) (.y screenPoint)) nil (by-ref point))
       (set! (.. roleobj transform localPosition) (v3 (.x point) (.y point) 0))))
@@ -37,17 +37,24 @@
         text (cmpt textobj Text)]
     (set! (.name textobj) (str title "-title"))
     (set! (.text text) title)
-    (child+ (@bfstate :names) textobj)
-    (swap! bfstate assoc (str title "-title") textobj)
+    (child+ (get-in @bfstate [:names :item]) textobj)
+    (swap! bfstate assoc (str title "-title") {:type :title, :item textobj})
     (role+ textobj :followobj (followobj-role obj))))
 
 
 ; Adding objects
 
+(defn rem-obj [n]
+  (let [obj (@bfstate n)]
+    (when (= (:type obj) :actor) (destroy! (:item (@bfstate (str n "-title")))))
+    (destroy! (:item obj))
+    (swap! bfstate dissoc n)))
+
 (defn add-obj 
   ([n type obj]
+   (rem-obj n)
    (swap! bfstate assoc n {:type type, :item obj})
-   (when (== type :actor) 
+   (when (= type :actor)
      (do (set! (.name obj) n) (title-follow n obj)))
    obj)
   ([n type obj pos] 
@@ -57,28 +64,17 @@
    (add-obj n type obj pos) 
    (rotation! obj (Quaternion/Euler (.x rot) (.y rot) (.z rot)))))
 
-(defn rem-obj [n]
-  (let [obj (@bfstate n)]
-    (when (== (:type obj) :actor) (destroy! (@bfstate (str n "-title"))))
-    (destroy! obj)
-    (swap! bfstate dissoc n)))
-
-(swap! bfstate assoc :names 
-    (let [obj (new GameObject "Names")
-          canvas (cmpt+ obj Canvas)]
-      (set! (.renderMode canvas) UnityEngine.RenderMode/ScreenSpaceOverlay)
-      obj))
 
 ; time
 
 (defn settime [t] 
-  (update-state (@bfstate :timekeeper) :time #(assoc % :rate t)))
+  (update-state (get-in @bfstate [:timekeeper :item]) :time #(assoc % :rate t)))
 
 (defn bftime []
-  ((state (@bfstate :timekeeper) :time) :time))
+  ((state (get-in @bfstate [:timekeeper :item]) :time) :time))
 
 (defn rate []
-  ((state (@bfstate :timekeeper) :time) :rate))
+  ((state (get-in @bfstate [:timekeeper :item]) :time) :rate))
 
 (defrole timekeeper-role
   :state {:time 0 :rate 1}
@@ -86,15 +82,30 @@
    [obj k] 
    (let [{:keys [:time :rate]} (state obj k)] 
      (state+ obj k 
-             {:time (+ time (* Time/deltaTime rate)) 
+             {:time (+ (bftime) (* Time/deltaTime rate)) 
               :rate rate}))))
 
-(add-obj
- :meta
- :timekeeper
- (let [tk (new GameObject)]
-   (role+ tk :time timekeeper-role)
-   tk))
+(defn deinit []
+  (doseq [k (keys @bfstate)] (rem-obj k))
+  (destroy! (GameObject/Find "Names")))
+
+
+(defn init []
+  (deinit)
+  (reset! bfstate {})
+  (add-obj
+   :names
+   :meta
+   (let [obj (new GameObject "Names")
+               canvas (cmpt+ obj Canvas)]
+           (set! (.renderMode canvas) UnityEngine.RenderMode/ScreenSpaceOverlay)
+           obj))
+  (add-obj
+   :timekeeper
+   :meta
+   (let [tk (new GameObject)]
+     (role+ tk :time timekeeper-role)
+     tk)))
 
 ; Actions
 
@@ -119,7 +130,7 @@
    (let [rstate (state obj k)
          time (rstate :time)
          rfn (rstate :fn)]
-     (when (< (mod (bftime) time) (- (bftime) (* (Time/deltaTime) (rate))))))))
+     (when (> 0 (- (mod (bftime) time) (* (Time/deltaTime) (rate)))) (rfn obj)))))
 
 (defn blink-cmpt [c t]
   (let [blobj (new GameObject)]
@@ -131,3 +142,11 @@
        %
        :fn 
        (fn [obj] (set! (.enabled c) (not (.enabled c))))))))
+
+(defrole on-collision
+  :state { :fn #() }
+  (on-collision-enter
+   [obj k col]
+   (let [rstate (state obj k)
+         rfn (rstate :fn)]
+     (rfn obj col))))

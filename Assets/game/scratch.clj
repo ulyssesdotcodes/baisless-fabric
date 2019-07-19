@@ -9,9 +9,19 @@
            [UnityEngine.Experimental.VFX VisualEffect]
            [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
            [UnityEngine.UI Text]
-           RectTransformUtility))
+           RectTransformUtility
+           BaseAgent))
 
-(use 'game.core)
+(use 'game.core :reload)
+(use 'game.names :reload)
+
+(init)
+(deinit)
+ 
+@bfstate 
+
+(rem-obj :timekeeper)
+(destroy! (GameObject/Find "Names"))
 
 (bftime)
 
@@ -47,22 +57,29 @@
 (destroy! (get DATA :testobj))
 
 
-; this works
-(map #(add-personality % "Mover") (take 20 (repeatedly #(randomname))))
-(map #(add-personality % "Avoider") (take 10 (repeatedly #(randomname))))
+(init) 
+
+(add-personality (randomname) "Mover")
+
+(map #(add-personality % "Mover") (take 10 (repeatedly #(randomname)))) 
+
+(map #(add-personality % "Avoider") (take 4 (repeatedly #(randomname))))
+
+(map #(add-personality % "Attractor") (take 10 (repeatedly #(randomname))))
 
 (doseq [[k v] @bfstate] (prn k)])
 
 (doseq [k (keys @bfstate)] (prn k)) 
+
 (doseq [k (keys @bfstate)] 
-  (when (not= (@bfstate k))(destroy! (@bfstate k))))
+  (when (= (@bfstate k) :actor) (cmpt (get-in @bfstate [k :item])BaseAgent)))
 
 
 
 (defn add-personality [name type]
-  (add-obj 
-    name
-    (instantiate (Resources/Load (str "Prefabs/Personalities/" type)))))
+  (let [actor (instantiate (Resources/Load (str "Prefabs/Personalities/" type)))]
+    (add-agent-vfx-col actor)
+    (add-obj name :actor actor)))
 
 (rem-obj "Karen")
 
@@ -72,9 +89,35 @@
 
 (add-obj
  "Spot"
- (blink-light LightType/Spot 800 (Color/red) 2)
+ :light
+ (blink-light LightType/Spot 800 (Color/red) 4)
  (v3 0 8 0)
  (v3 90 0 0))
+
+(add-obj
+ "Point0"
+ :light
+ (blink-light LightType/Point 3200 (Color/red) 0.5)
+ (v3 10 1 10))
+
+(add-obj
+ "Point1"
+ :light
+ (blink-light LightType/Point 3200 (Color/blue) 0.33)
+ (v3 -10 1 10))
+
+(add-obj
+ "Point2"
+ :light
+ (blink-light LightType/Point 3200 (Color/green) 2)
+ (v3 -10 1 -10))
+
+(add-obj
+ "Point3"
+ :light
+ (blink-light LightType/Point 3200 (Color/yellow) 2)
+ (v3 10 1 -10))
+
 (rem-obj "Spot")
 
 ; vfx
@@ -89,9 +132,12 @@
 
 ; Lights
 
-(defrole blink
-  :state {:speed 0}
-  (update [obj k] ))
+(defn blink-light [type lumens color speed]
+  (let [light (create-light type lumens color)]
+    (role+ light :blink repeattrigger)
+    (update-state light :blink #(assoc % :time speed))
+    (update-state light :blink #(assoc % :fn (fn [obj] (set! (.enabled (cmpt obj Light)) (not (.enabled (cmpt obj Light)))))))
+    light))
 
 (defn create-light 
     ([^LightType type lumens ^Color color] 
@@ -99,91 +145,18 @@
               light (cmpt+ gobj Light)
               hdlight (cmpt+ gobj HDAdditionalLightData)]
           (set! (.type light) type)
+          (set! (.color light) color)
           (set! (.intensity hdlight) lumens)
           gobj)))
 
-; Text that follows an object
+(defn add-agent-vfx-col [obj]
+  (set! (.visualEffectAsset (cmpt+ obj VisualEffect)) (Resources/Load "VFX/AgentCollision"))
+  (role+ obj :agent-vfx-col on-collision)
+  (update-state 
+   obj 
+   :agent-vfx-col 
+   #(assoc 
+     % :fn 
+     (fn [obj col] 
+       (.SendEvent (cmpt obj VisualEffect) "OnPlay")))))
 
-(defn follow-update [roleobj k]
-    (let [rolestate (state roleobj k)
-          followobj (rolestate :obj)
-          followobjpos (.. followobj transform position)
-          pos (v3 (.x followobjpos) (+ (.y followobjpos) 0.25) (.z followobjpos))
-          screenPoint (.WorldToScreenPoint Camera/main pos)
-          textcmpt (cmpt roleobj Text)
-          canvasRect (cmpt (@bfstate :names) UnityEngine.RectTransform)
-          point Vector2/zero]
-      (UnityEngine.RectTransformUtility/ScreenPointToLocalPointInRectangle canvasRect (v2 (.x screenPoint) (.y screenPoint)) nil (by-ref point))
-      (set! (.. roleobj transform localPosition) (v3 (.x point) (.y point) 0))))
-
-(defn followobj-role [obj] { :state {:obj obj} :update #'follow-update })
-
-(defn title-follow [title obj]
-  (let [textobj (instantiate (Resources/Load "Prefabs/Title"))
-        text (cmpt textobj Text)]
-    (set! (.name textobj) (str title "-title"))
-    (set! (.text text) title)
-    (child+ (@bfstate :names) textobj)
-    (swap! bfstate assoc (str title "-title") textobj)
-    (role+ textobj :followobj (followobj-role obj))))
-
-
-; Initial state
-
-(defn cljtimescalef [] @cljtimescale)
-
-(defn add-obj 
-  ([n obj]
-   (swap! bfstate assoc n obj)
-   (if (not (keyword? n)) 
-     (do (set! (.name obj) n) (title-follow n obj)) ())
-   obj)
-  ([n obj pos] 
-   (add-obj n obj) 
-   (position! obj pos))
-  ([n obj pos rot] 
-   (add-obj n obj pos) 
-   (rotation! obj (Quaternion/Euler (.x rot) (.y rot) (.z rot)))))
-
-(defn rem-obj [n]
-  (destroy! (@bfstate n))
-;   (if (not (keyword? n)) (destroy! (@bfstate (str n "-title"))) ())
-  (swap! bfstate dissoc n))
-
-(swap! bfstate assoc :names 
-    (let [obj (new GameObject "Names")
-          canvas (cmpt+ obj Canvas)]
-      (set! (.renderMode canvas) UnityEngine.RenderMode/ScreenSpaceOverlay)
-      obj))
-
-; time
-(defn settime [t] 
-  (update-state (@bfstate :timekeeper) :time #(assoc % :rate t)))
-
-(defn time []
-  ((state (@bfstate :timekeeper) :time) :time))
-
-(add-obj
- :timekeeper
- (let [tk (new GameObject)]
-   (role+ tk :time timekeeper-role)
-   tk))
-(rem-obj :timekeeper)
-
-(@bfstate :timekeeper)
-
-((state (@bfstate :timekeeper) :time) :time)
-
-(defrole timekeeper-role
-  :state {:time 0 :rate 1}
-  (update 
-   [obj k] 
-   (let [{:keys [:time :rate]} (state obj k)] 
-     (state+ obj k 
-             {:time (+ time (* Time/deltaTime rate)) 
-              :rate rate}))))
-
-(defn run-on-trigger [tmod toff f]
-  (let [t (time)
-        offset])
-  (when ))

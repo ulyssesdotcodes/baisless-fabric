@@ -5168,6 +5168,4 @@
    ])
 
 (defn randomname [] 
-  (rand-nth namelistk))
-
-(randomname)
+  (rand-nth namelist))
