@@ -1,48 +1,46 @@
 (ns game.cam
-  (use arcadia.core arcadia.linear game.spawner)
-  (:import 
-   [UnityEngine ScriptableObject]
-   CameraShake
-   CameraShake+ShakeType
-   CameraShake+NoiseType
-   CameraShakeOnCollision
-   StopCameraShakeOnCollision
-   CameraShakeManager
-   [game.spawner SpawnComp]))
+  (use arcadia.core arcadia.linear hard.core game.core game.names)
+  (:import [UnityEngine Physics
+            GameObject Input
+            Vector2 Mathf Resources Transform
+            PrimitiveType Collider Light Renderer
+            Color Application Debug Time Canvas LightType
+            Quaternion Rigidbody Camera]
+           [UnityEngine.Experimental.VFX VisualEffect VFXEventAttribute]
+           [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
+           [UnityEngine.UI Text]
+           RectTransformUtility
+           BaseAgent))
 
-(defn new-ambient-shake
-  ([] (new-ambient-shake 0.25))
-  ([speed] (let [cs (ScriptableObject/CreateInstance "CameraShake")]
-             (set! (.Shake cs) (enum-val CameraShake+ShakeType "Constant"))
-             (set! (.Noise cs) (enum-val CameraShake+NoiseType "Perlin"))
-             (set! (.RotateExtents cs) (v3 0.1 0.1 0.1))
-             (set! (.MoveExtents cs) (v3 0.5 0.5 0.5))
-             (set! (.Speed cs) (float speed))
-             (set! (.Duration cs) (float -1))
-             cs)))
+(defn main-cam [] (.gameObject (Camera/main)))
 
-(defn new-impact-shake
-  ([] (new-impact-shake 5))
-  ([speed] (let [cs (ScriptableObject/CreateInstance "CameraShake")]
-             (set! (.Shake cs) (enum-val CameraShake+ShakeType "EaseOut"))
-             (set! (.Noise cs) (enum-val CameraShake+NoiseType "Perlin"))
-             (set! (.RotateExtents cs) (v3 0.5 0.5 0.5))
-             (set! (.MoveExtents cs) (v3 1 1 1))
-             (set! (.Speed cs) (float speed))
-             (set! (.Duration cs) (float 0.5))
-             cs)))
 
-(defn camerashake-oncol []
-  (let [cs (new-ambient-shake)]
-  [(SpawnComp. CameraShakeOnCollision #(do (set! (.CameraShake %1) cs))) 
-   (SpawnComp. StopCameraShakeOnCollision #(do (set! (.CameraShake %1) cs)))]))
+(defrole face-parent-velocity
+  :state {}
+  (update 
+   [obj k]
+   (let [parentrb (cmpt (parent obj) Rigidbody)
+         parentvelocity (.velocity parentrb)
+         parentlocalvelocity (.InverseTransformDirection (.transform (parent obj)) parentvelocity)
+         velocityrot (Quaternion/LookRotation parentlocalvelocity)
+         targetrot (Quaternion/Lerp (-> obj .transform .localRotation) velocityrot 0.1) 
+         finalrot (qq* velocityrot (Quaternion/Euler 90 0 0))
+         velocitypos (v3* (qforward targetrot) -3)
+         finalpos (v3+ velocitypos (v3 0 3 0))]
+     (sets! (.transform obj) 
+            localRotation targetrot
+            localPosition finalpos))))
 
-(defn play-shake [cs]
-  (.Play (cmpt (object-named "Camera") CameraShakeManager) cs))
+(defn follow-cam [name]
+  (child+ (get-obj name) (main-cam))
+  (role+ (main-cam) :face-parent-velocity face-parent-velocity)
+  (sets! (.transform (main-cam))
+         localPosition (v3 0 3 -5)
+         localRotation (Quaternion/Euler 30 0 0)))
 
-(defn stop-shake [cs]
-  (.Stop (cmpt (object-named "Camera") CameraShakeManager) cs false))
-
-(defn stop-all-shakes 
-  ([] (stop-all-shakes false))
-  ([imm] (.StopAll (cmpt (object-named "Camera") CameraShakeManager) imm)))
+(defn unfollow-cam []
+  (child- (parent (main-cam)) (main-cam))
+  (role- (main-cam) :face-parent-velocity)
+  (sets! (.transform (main-cam))
+         localPosition (v3 -21.51 39.44 -20.65)
+         localRotation (Quaternion/Euler 60 45 0)))

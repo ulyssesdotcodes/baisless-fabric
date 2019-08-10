@@ -22,7 +22,7 @@ public class BaseAgent : Agent, IResettable {
     {
         base.InitializeAgent();
 
-        foreach (MLReset reset in Resets) {
+        foreach(MLReset reset in Resets) {
             reset.Initialize(this);
         }
 
@@ -37,8 +37,6 @@ public class BaseAgent : Agent, IResettable {
         foreach (MLAction action in Actions) {
             action.Initialize();
         }
-
-        Reset();
 
     }
 

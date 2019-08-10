@@ -18,8 +18,8 @@ MonoBehaviour:
     vectorActionSize: 02000000
     cameraResolutions: []
     vectorActionDescriptions:
-    - forward
-    - turn
+    - 
+    - 
     vectorActionSpaceType: 1
-  model: {fileID: 5022602860645237092, guid: f6016406ac7573a4a99b117d11b19b8f, type: 3}
+  model: {fileID: 5022602860645237092, guid: 76b7c5cd0abbd6f458003dde903b3681, type: 3}
   inferenceDevice: 0

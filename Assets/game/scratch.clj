@@ -1,12 +1,13 @@
 (ns game.spawner
-  (use arcadia.core arcadia.linear hard.core game.core game.names)
+  (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam)
   (:import [UnityEngine Physics
             GameObject Input
             Vector2 Mathf Resources Transform
             PrimitiveType Collider Light Renderer
             Color Application Debug Time Canvas LightType
-            Quaternion]
-           [UnityEngine.Experimental.VFX VisualEffect]
+            Quaternion Rigidbody Camera]
+           [UnityEngine.Experimental.VFX VisualEffect VFXEventAttribute]
+           [UnityEngine.Rendering Volume]
            [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
            [UnityEngine.UI Text]
            RectTransformUtility
@@ -14,6 +15,8 @@
 
 (use 'game.core :reload)
 (use 'game.names :reload)
+(use 'game.personalities :reload)
+(use 'game.cam :reload)
 
 (init)
 (deinit)
@@ -61,11 +64,14 @@
 
 (add-personality (randomname) "Mover")
 
-(map #(add-personality % "Mover") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "Mover") (take 20 (repeatedly #(randomname)))) 
+(map #(add-personality % "Speedster") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "Spacer") (take 10 (repeatedly #(randomname)))) 
 
-(map #(add-personality % "Avoider") (take 4 (repeatedly #(randomname))))
+(map #(add-personality % "Avoider") (take 20 (repeatedly #(randomname))))
 
-(map #(add-personality % "Attractor") (take 10 (repeatedly #(randomname))))
+(init)
+(map #(add-personality % "Attractor") (take 20 (repeatedly #(randomname))))
 
 (doseq [[k v] @bfstate] (prn k)])
 
@@ -75,11 +81,6 @@
   (when (= (@bfstate k) :actor) (cmpt (get-in @bfstate [k :item])BaseAgent)))
 
 
-
-(defn add-personality [name type]
-  (let [actor (instantiate (Resources/Load (str "Prefabs/Personalities/" type)))]
-    (add-agent-vfx-col actor)
-    (add-obj name :actor actor)))
 
 (rem-obj "Karen")
 
@@ -149,14 +150,45 @@
           (set! (.intensity hdlight) lumens)
           gobj)))
 
-(defn add-agent-vfx-col [obj]
-  (set! (.visualEffectAsset (cmpt+ obj VisualEffect)) (Resources/Load "VFX/AgentCollision"))
-  (role+ obj :agent-vfx-col on-collision)
-  (update-state 
-   obj 
-   :agent-vfx-col 
-   #(assoc 
-     % :fn 
-     (fn [obj col] 
-       (.SendEvent (cmpt obj VisualEffect) "OnPlay")))))
+(init)
+(map #(add-personality % "Attractor") (take 10 (repeatedly #(randomname))))
+
+(main-cam)
+
+(get-obj "Aura")
+
+(follow-cam "Sook")
+(unfollow-cam)
+
+(child+ (get-obj "Aura") (main-cam))
+(child- (get-obj "Aura") (main-cam))
+
+(defn set-bloom [intensity]
+  (let [volumeobj (GameObject/Find "Volume")
+        volume (cmpt volumeobj Volume)
+        profile (.profile volume)
+        components (.components profile)
+        bloom (nth components 4)]
+    (set! (-> bloom .intensity .value) (float intensity))))
+
+(defn set-motionblur [intensity]
+  (let [volumeobj (GameObject/Find "Volume")
+        volume (cmpt volumeobj Volume)
+        profile (.profile volume)
+        components (.components profile)
+        bloom (nth components 5)]
+    (set! (-> bloom .intensity .value) (float intensity))))
+
+(defn set-dof [intensity]
+  (let [volumeobj (GameObject/Find "Volume")
+        volume (cmpt volumeobj Volume)
+        profile (.profile volume)
+        components (.components profile)
+        dof (nth components 6)]
+    (set! (-> dof .active) (if (> intensity 0) true false))
+    (set! (-> dof .focusDistance .value) (float intensity))))
+
+(set-bloom 0.1)
+(set-motionblur 0)
+(set-dof 10)
 

@@ -15,7 +15,6 @@
 
 (def bfstate (atom {}))
 
-
 ; Text that follows an object
 
 (defn follow-update [roleobj k]
@@ -63,6 +62,8 @@
   ([n type obj pos rot] 
    (add-obj n type obj pos) 
    (rotation! obj (Quaternion/Euler (.x rot) (.y rot) (.z rot)))))
+
+(defn get-obj [name] (:item (@bfstate name)))
 
 
 ; time

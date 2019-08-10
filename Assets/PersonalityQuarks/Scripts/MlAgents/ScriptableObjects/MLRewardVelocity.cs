@@ -1,7 +1,7 @@
 using UnityEngine;
 using MLAgents;
 
-[CreateAssetMenu(menuName="ML/Rewards/Movement")]
+[CreateAssetMenu(menuName="ML/Rewards/Velocity")]
 class MLRewardVelocity : MLReward {
     public float Multiplier;
 
@@ -10,7 +10,7 @@ class MLRewardVelocity : MLReward {
         
         if(rb == null) return;
 
-        agent.AddReward(rb.velocity.x * Multiplier);
-        agent.AddReward(rb.velocity.z * Multiplier);
+        agent.AddReward(Mathf.Abs(rb.velocity.x) * Multiplier);
+        agent.AddReward(Mathf.Abs(rb.velocity.z) * Multiplier);
     }
 }
