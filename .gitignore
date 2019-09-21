@@ -3,7 +3,7 @@
 [Aa]ssets/gitignored/**/*.meta
 
 #Arcadia
-[Aa]ssets/Arcadia
+# [Aa]ssets/Arcadia
 Arcadia
 
 # Normal
