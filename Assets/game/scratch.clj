@@ -1,4 +1,4 @@
-(ns game.spawner
+(ns game.scratch
   (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam)
   (:import [UnityEngine Physics
             GameObject Input
@@ -19,6 +19,7 @@
 (use 'game.cam :reload)
 
 (init)
+
 (deinit)
  
 @bfstate 
@@ -59,14 +60,23 @@
 
 (destroy! (get DATA :testobj))
 
-
 (init) 
 
-(add-personality (randomname) "Mover")
+(add-personality (randomname) "Speedy")
 
 (map #(add-personality % "Mover") (take 20 (repeatedly #(randomname)))) 
-(map #(add-personality % "Speedster") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "Speedy") (take 10 (repeatedly #(randomname)))) 
 (map #(add-personality % "Spacer") (take 10 (repeatedly #(randomname)))) 
+
+(map #(add-personality % "GraffitiBlue") (take 4 (repeatedly #(randomname)))) 
+(map #(add-personality % "GraffitiRed") (take 4 (repeatedly #(randomname)))) 
+
+(do
+  (add-personality (randomname) "FindeachotherBlue")
+  (add-personality (randomname) "FindeachotherRed"))
+
+(map #(add-personality % "GraffitiBlue") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "GraffitiRed") (take 10 (repeatedly #(randomname)))) 
 
 (map #(add-personality % "Avoider") (take 20 (repeatedly #(randomname))))
 
@@ -121,6 +131,33 @@
 
 (rem-obj "Spot")
 
+; target
+(map #(add-personality % "Mover") (take 20 (repeatedly #(randomname)))) 
+
+(dotimes [n 32] (add-target))
+
+(defn add-target []
+  (add-obj
+    :uniq
+    :target
+    (let [obj (instantiate-in-area (Resources/Load "Prefabs/Target"))]
+      (if (< (?f) 0.5) (set! (.tag obj) "bluetarget") (set! (.tag obj) "redtarget"))
+       obj)
+    (v3 (?f -32 32) 1 (?f -32 32))))
+
+(dotimes [n 56] (add-cubewall))
+(defn add-cubewall []
+  (add-obj
+    :uniq
+    :wall
+    (instantiate-in-area (Resources/Load "Prefabs/CubeWall"))
+    (v3 (?f -32 32) 1 (?f -32 32))))
+
+
+(rem-type :target)
+(rem-type :wall)
+(rem-type :actor)
+
 ; vfx
 
 (defn add-fire [obj]
@@ -140,6 +177,7 @@
     (update-state light :blink #(assoc % :fn (fn [obj] (set! (.enabled (cmpt obj Light)) (not (.enabled (cmpt obj Light)))))))
     light))
 
+
 (defn create-light 
     ([^LightType type lumens ^Color color] 
         (let [gobj (new GameObject)
@@ -157,7 +195,7 @@
 
 (get-obj "Aura")
 
-(follow-cam "Sook")
+(follow-cam "Dirk")
 (unfollow-cam)
 
 (child+ (get-obj "Aura") (main-cam))
@@ -188,7 +226,8 @@
     (set! (-> dof .active) (if (> intensity 0) true false))
     (set! (-> dof .focusDistance .value) (float intensity))))
 
-(set-bloom 0.1)
-(set-motionblur 0)
+(set-bloom 2)
+(set-bloom 0.2)
+(set-motionblur 10)
 (set-dof 10)
 

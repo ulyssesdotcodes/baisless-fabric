@@ -41,6 +41,7 @@
     (role+ textobj :followobj (followobj-role obj))))
 
 
+
 ; Adding objects
 
 (defn rem-obj [n]
@@ -49,13 +50,20 @@
     (destroy! (:item obj))
     (swap! bfstate dissoc n)))
 
+(defn rem-type [type]
+  (doseq [k (keys @bfstate)] (when (= (get-in @bfstate [k :type]) type) (rem-obj k))))
+
+(defn get-instance-id [^UnityEngine.GameObject obj] 
+  (str (.GetInstanceID obj)))
+
 (defn add-obj 
-  ([n type obj]
-   (rem-obj n)
-   (swap! bfstate assoc n {:type type, :item obj})
-   (when (= type :actor)
-     (do (set! (.name obj) n) (title-follow n obj)))
-   obj)
+  ([norig type obj]
+   (let [n (if (not= norig :uniq) norig (get-instance-id obj))]
+     (rem-obj n)
+     (swap! bfstate assoc n {:type type, :item obj})
+     (when (= type :actor)
+       (do (set! (.name obj) n) (title-follow n obj)))
+     obj))
   ([n type obj pos] 
    (add-obj n type obj) 
    (position! obj pos))
@@ -63,7 +71,11 @@
    (add-obj n type obj pos) 
    (rotation! obj (Quaternion/Euler (.x rot) (.y rot) (.z rot)))))
 
+
 (defn get-obj [name] (:item (@bfstate name)))
+
+(defn instantiate-in-area [resource]
+  (UnityEngine.Object/Instantiate resource (.transform (get-in @bfstate [:area :item]))))
 
 
 ; time
@@ -106,7 +118,11 @@
    :meta
    (let [tk (new GameObject)]
      (role+ tk :time timekeeper-role)
-     tk)))
+     tk))
+  (add-obj
+    :area
+    :meta
+    (instantiate (Resources/Load (str "Prefabs/Area")))))
 
 ; Actions
 

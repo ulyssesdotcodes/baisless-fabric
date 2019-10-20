@@ -156,6 +156,9 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 25bbb35c58f11b24ba55216242941ab7, type: 2}
     - {fileID: 11400000, guid: 1243964ca3bb8c547bc8bcda2c212985, type: 2}
     - {fileID: 11400000, guid: d97fb78dd3611d54a80b6dc6062f53e7, type: 2}
+    - {fileID: 11400000, guid: d11ba646875b3c14e97bc4c67fc61939, type: 2}
+    - {fileID: 11400000, guid: 61146661f3ebdf24c9f11808859e30e2, type: 2}
+    - {fileID: 11400000, guid: df86387f4c52d80489adb9d14f3a18c6, type: 2}
     _brainsToControl: []
   maxSteps: 0
   trainingConfiguration:
@@ -243,7 +246,7 @@ GameObject:
   - component: {fileID: 541643222}
   m_Layer: 0
   m_Name: Plane
-  m_TagString: Untagged
+  m_TagString: ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -317,7 +320,7 @@ Transform:
   m_GameObject: {fileID: 541643221}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4, y: 1, z: 4}
+  m_LocalScale: {x: 8, y: 1, z: 8}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2

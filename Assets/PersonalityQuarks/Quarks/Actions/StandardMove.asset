@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: StandardMove
   m_EditorClassIdentifier: 
   forwardIdx: 0
-  turnIdx: 1
-  MoveSpeed: 3
-  MoveMin: -0.6
+  rightIdx: 1
+  turnIdx: 2
+  MoveSpeed: 1
+  MoveSpeedVariance: 0
+  MoveMin: -1
   MoveMax: 1
   TurnSpeed: 180
+  TurnSpeedVariance: 0
   TurnMin: -1
   TurnMax: 1

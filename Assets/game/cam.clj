@@ -24,9 +24,9 @@
          parentlocalvelocity (.InverseTransformDirection (.transform (parent obj)) parentvelocity)
          velocityrot (Quaternion/LookRotation parentlocalvelocity)
          targetrot (Quaternion/Lerp (-> obj .transform .localRotation) velocityrot 0.1) 
-         finalrot (qq* velocityrot (Quaternion/Euler 90 0 0))
+         finalrot (qq* velocityrot (Quaternion/Euler 30 0 0))
          velocitypos (v3* (qforward targetrot) -3)
-         finalpos (v3+ velocitypos (v3 0 3 0))]
+         finalpos (v3+ velocitypos (v3 0 0 0))]
      (sets! (.transform obj) 
             localRotation targetrot
             localPosition finalpos))))
@@ -35,12 +35,12 @@
   (child+ (get-obj name) (main-cam))
   (role+ (main-cam) :face-parent-velocity face-parent-velocity)
   (sets! (.transform (main-cam))
-         localPosition (v3 0 3 -5)
-         localRotation (Quaternion/Euler 30 0 0)))
+         localPosition (v3 0 0 -10)
+         localRotation (Quaternion/Euler 0 0 0)))
 
 (defn unfollow-cam []
   (child- (parent (main-cam)) (main-cam))
   (role- (main-cam) :face-parent-velocity)
   (sets! (.transform (main-cam))
-         localPosition (v3 -21.51 39.44 -20.65)
+         localPosition (v3 -25.51 47.44 -23.65)
          localRotation (Quaternion/Euler 60 45 0)))

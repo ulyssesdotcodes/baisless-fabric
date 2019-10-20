@@ -1,9 +1,9 @@
 using UnityEngine;
 
 public abstract class MLAction : ScriptableObject {
-    public void Initialize() {
+    public virtual void Initialize(BaseAgent agent) {
 
     }
 
-    public abstract void RunAction(float[] vectorActions, GameObject go);
+    public abstract void RunAction(BaseAgent agent, float[] vectorActions);
 }
