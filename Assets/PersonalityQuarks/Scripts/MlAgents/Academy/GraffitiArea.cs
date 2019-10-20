@@ -7,7 +7,7 @@ public class GraffitiArea : Area
     public string TargetSpawnNumberKeyVal = "8";
     public string TargetSpawnDistanceKeyVal = "16";
     public string ActorSpawnNumberKeyVal = "8";
-    public GameObject Target;
+    public GameObject[] Targets;
     public GameObject BlueActor;
     public GameObject RedActor;
     private List<GameObject> Spawned = new List<GameObject>();
@@ -38,12 +38,15 @@ public class GraffitiArea : Area
         Spawned.Clear();
 
         for(int i = 0; i < SpawnNumber; i++) {
+            GameObject Target = Targets[(int)Random.Range(0, Targets.Length)];
             Vector2 position = new Vector2(Random.Range(-SpawnDistance, SpawnDistance), Random.Range(-SpawnDistance, SpawnDistance));
-            GameObject wall = GameObject.Instantiate(Target, new Vector3(position.x, base.StartY + 1f, position.y), Quaternion.identity);
+            Quaternion rotation = Quaternion.EulerAngles(0, Random.Range(0, 360), 0);
+            GameObject wall = GameObject.Instantiate(Target, new Vector3(position.x, base.StartY + 1f, position.y), rotation);
+            GameObject targetobj = wall.transform.GetChild(1).gameObject;
             if(Random.Range(0f, 1f) > 0.5f) {
-                wall.tag = "bluetarget";
+                targetobj.tag = "bluetarget";
             } else {
-                wall.tag = "redtarget";
+                targetobj.tag = "redtarget";
             }
             wall.transform.SetParent(gameObject.transform);
             Spawned.Add(wall);
@@ -52,7 +55,7 @@ public class GraffitiArea : Area
         for(int i = 0; i < ActorSpawnNumber; i++) {
             GameObject actorPrefab = i % 2 == 0 ? BlueActor : RedActor;
             Vector2 position = new Vector2(Random.Range(-SpawnDistance, SpawnDistance), Random.Range(-SpawnDistance, SpawnDistance));
-            GameObject actor = GameObject.Instantiate(actorPrefab, new Vector3(position.x, base.StartY + 1f, position.y), Quaternion.identity, gameObject.transform);
+            GameObject actor = GameObject.Instantiate(actorPrefab, new Vector3(position.x, base.StartY + 0.5f, position.y), Quaternion.identity, gameObject.transform);
             Spawned.Add(actor);
         }
     }

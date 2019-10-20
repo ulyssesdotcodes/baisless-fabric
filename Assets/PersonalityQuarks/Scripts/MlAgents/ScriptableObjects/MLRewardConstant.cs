@@ -17,7 +17,6 @@ class MLRewardConstant : MLReward {
 
     public override void AddReward(BaseAgent agent, float[] vectorAction) {
         Amount = AcademyParameters.Update(academy, AmountKeyVal, Amount);
-        agent.Logger.Log(String.Concat("Constant reward", Amount / (float)agent.agentParameters.maxStep));
         agent.AddReward(Amount / (float)agent.agentParameters.maxStep);
     }
 }

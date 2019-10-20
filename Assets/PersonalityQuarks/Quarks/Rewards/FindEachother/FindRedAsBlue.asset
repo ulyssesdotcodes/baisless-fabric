@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: FindRedAsBlue
   m_EditorClassIdentifier: 
   Tag: redactor
-  NewTag: 
   Label: 
   LabelPrevents: 
   RewardKeyVal: 2

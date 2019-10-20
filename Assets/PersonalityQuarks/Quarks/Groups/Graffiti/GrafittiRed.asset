@@ -22,5 +22,5 @@ MonoBehaviour:
   Rewards:
   - {fileID: 11400000, guid: 0162ce2043703f14799cd2739f7abd74, type: 2}
   - {fileID: 11400000, guid: 49ad0db65e33c184e8ea9e92d7691eba, type: 2}
-  - {fileID: 11400000, guid: 115cce2b700f3a040a13ff6773a46a4a, type: 2}
+  - {fileID: 11400000, guid: 71a18242ae36c88479fbb78081dbabe3, type: 2}
   Actions: []

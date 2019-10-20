@@ -61,15 +61,25 @@
 (destroy! (get DATA :testobj))
 
 (init) 
+(deinit)
+(do
+  (add-personality "Ursula" "FindEachother/HelperBlue")
+  (add-personality "Jack" "FindEachother/HelperRed"))
 
-(add-personality (randomname) "Speedy")
+(add-personality "Test" "DanceFloor/Mover")
 
-(map #(add-personality % "Mover") (take 20 (repeatedly #(randomname)))) 
-(map #(add-personality % "Speedy") (take 10 (repeatedly #(randomname)))) 
-(map #(add-personality % "Spacer") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Mover") (take 3 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Speedster") (take 3 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Spacer") (take 3 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Attractor") (take 3 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Avoider") (take 3 (repeatedly #(randomname)))) 
 
-(map #(add-personality % "GraffitiBlue") (take 4 (repeatedly #(randomname)))) 
-(map #(add-personality % "GraffitiRed") (take 4 (repeatedly #(randomname)))) 
+(map #(add-personality % "graffiti/Blue") (take 2 repeatedly #(randomname)))) 
+
+(map #(add-personality % "graffiti/Red") (take 2 (repeatedly #(randomname)))) 
+
+(map #(add-personality % "graffiti/Blue") (take 2 (repeatedly #(randomname)))) 
+
 
 (do
   (add-personality (randomname) "FindeachotherBlue")
@@ -106,15 +116,22 @@
  (v3 90 0 0))
 
 (add-obj
+ "Spotblue"
+ :light
+ (blink-light LightType/Spot 800 (Color/blue) 4)
+ (v3 0 8 0)
+ (v3 90 0 0))
+
+(add-obj
  "Point0"
  :light
- (blink-light LightType/Point 3200 (Color/red) 0.5)
+ (blink-light LightType/Spot 3200 (Color/red) 0.5)
  (v3 10 1 10))
 
 (add-obj
  "Point1"
  :light
- (blink-light LightType/Point 3200 (Color/blue) 0.33)
+ (blink-light LightType/Spot 3200 (Color/blue) 0.33)
  (v3 -10 1 10))
 
 (add-obj
@@ -126,7 +143,7 @@
 (add-obj
  "Point3"
  :light
- (blink-light LightType/Point 3200 (Color/yellow) 2)
+ (blink-light LightType/Spot 3200 (Color/yellow) 2)
  (v3 10 1 -10))
 
 (rem-obj "Spot")
@@ -145,12 +162,40 @@
        obj)
     (v3 (?f -32 32) 1 (?f -32 32))))
 
-(dotimes [n 56] (add-cubewall))
+(defn add-wall []
+  (add-obj
+    :uniq
+    :target
+    (let [obj (instantiate-in-area (Resources/Load "Prefabs/Target"))]
+      (if (< (?f) 0.5) (set! (.tag obj) "bluetarget") (set! (.tag obj) "redtarget"))
+       obj)
+    (v3 (?f -32 32) 1 (?f -32 32))))
+
+(dotimes [n 16] (add-cubewall))
+(dotimes [n 7] (add-rectwall))
+
+(dotimes [n 60] (add-column))
+
+
 (defn add-cubewall []
   (add-obj
     :uniq
     :wall
     (instantiate-in-area (Resources/Load "Prefabs/CubeWall"))
+    (v3 (?f -32 32) 1 (?f -32 32))))
+
+(defn add-column []
+  (add-obj
+    :uniq
+    :wall
+    (instantiate-in-area (Resources/Load "Prefabs/Column"))
+    (v3 (?f -32 32) 1 (?f -32 32))))
+
+(defn add-rectwall []
+  (add-obj
+    :uniq
+    :wall
+    (instantiate-in-area (Resources/Load "Prefabs/RectWall"))
     (v3 (?f -32 32) 1 (?f -32 32))))
 
 
@@ -159,6 +204,8 @@
 (rem-type :actor)
 
 ; vfx
+
+(add-fire 
 
 (defn add-fire [obj]
   (let [vfxc (cmpt+ obj VisualEffect)]
@@ -195,8 +242,11 @@
 
 (get-obj "Aura")
 
-(follow-cam "Dirk")
+(follow-cam "Diamond")
+
 (unfollow-cam)
+
+(rem-type :acctor)
 
 (child+ (get-obj "Aura") (main-cam))
 (child- (get-obj "Aura") (main-cam))
@@ -226,8 +276,10 @@
     (set! (-> dof .active) (if (> intensity 0) true false))
     (set! (-> dof .focusDistance .value) (float intensity))))
 
-(set-bloom 2)
+(set-bloom 
+  0.3)
 (set-bloom 0.2)
-(set-motionblur 10)
-(set-dof 10)
+(set-motionblu0.4)
+(set-motionblur 1.6)
+(set-dof 0)
 
