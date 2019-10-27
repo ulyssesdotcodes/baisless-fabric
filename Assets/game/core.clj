@@ -133,7 +133,6 @@
    (let [tstate (state obj k)
          trigger (tstate :trigger)
          trigger-fn (tstate :trigger-fn)]
-     (Debug/Log (bftime))
      (when
       (and
        (< (- (bftime) (* (Time/deltaTime) (rate))) trigger)

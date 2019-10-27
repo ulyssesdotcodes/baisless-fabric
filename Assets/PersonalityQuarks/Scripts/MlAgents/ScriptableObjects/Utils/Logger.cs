@@ -26,7 +26,6 @@ public class Logger : ScriptableObject {
     }
 
     public virtual void Log(Message message) {
-      Debug.Log("Logging root");
         if(IsLoggingDebug) {
             Debug.Log(message.message);
         }

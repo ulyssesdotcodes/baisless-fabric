@@ -68,17 +68,17 @@
 
 (add-personality "Test" "DanceFloor/Mover")
 
-(map #(add-personality % "DanceFloor/Mover") (take 3 (repeatedly #(randomname)))) 
-(map #(add-personality % "DanceFloor/Speedster") (take 3 (repeatedly #(randomname)))) 
-(map #(add-personality % "DanceFloor/Spacer") (take 3 (repeatedly #(randomname)))) 
-(map #(add-personality % "DanceFloor/Attractor") (take 3 (repeatedly #(randomname)))) 
-(map #(add-personality % "DanceFloor/Avoider") (take 3 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Mover") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Speedster") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Spacer") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Attractor") (take 10 (repeatedly #(randomname))))
 
-(map #(add-personality % "graffiti/Blue") (take 2 repeatedly #(randomname)))) 
+  (map #(add-personality % "DanceFloor/Avoider") (take 10 (repeatedly #(randomname)))) 
 
-(map #(add-personality % "graffiti/Red") (take 2 (repeatedly #(randomname)))) 
+(map #(add-personality % "graffiti/Blue") (take 10 (repeatedly #(randomname))))) 
 
-(map #(add-personality % "graffiti/Blue") (take 2 (repeatedly #(randomname)))) 
+(map #(add-personality % "graffiti/Red") (take 10 (repeatedly #(randomname)))) 
+
 
 
 (do
@@ -171,10 +171,10 @@
        obj)
     (v3 (?f -32 32) 1 (?f -32 32))))
 
-(dotimes [n 16] (add-cubewall))
-(dotimes [n 7] (add-rectwall))
-
-(dotimes [n 60] (add-column))
+(do
+  (dotimes [n 16] (add-cubewall))
+  (dotimes [n 7] (add-rectwall))
+  (dotimes [n 16] (add-column)))
 
 
 (defn add-cubewall []
@@ -246,7 +246,7 @@
 
 (unfollow-cam)
 
-(rem-type :acctor)
+(rem-type :actor)
 
 (child+ (get-obj "Aura") (main-cam))
 (child- (get-obj "Aura") (main-cam))

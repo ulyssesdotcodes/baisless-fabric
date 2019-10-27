@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd8069772d9740147a021539f3f59b92, type: 3}
   m_Name: CanvasLogger
   m_EditorClassIdentifier: 
-  IsLoggingDebug: 1
+  IsLoggingDebug: 0
   IsLoggingAgent: 1
   IsLoggingWorld: 1
   LoggingFont: {fileID: 12800000, guid: 4155fa0c84daeef4fa710560b1c85129, type: 3}

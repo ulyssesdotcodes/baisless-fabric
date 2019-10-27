@@ -93,4 +93,8 @@ public class LabelCanvas : MonoBehaviour {
 
         textGameObject.transform.localPosition = canvasPos;
     }
+
+    public void OnDestroy() {
+      GameObject.Destroy(textGameObject);
+    }
 }

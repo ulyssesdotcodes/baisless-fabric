@@ -19,7 +19,6 @@
    obj :agent-vfx-col-color
    (let [color (.color (.material (cmpt obj Renderer)))]
      (v3 (.r color) (.g color) (.b color))))
-  (Debug/Log (state obj :agent-vfx-col-color))
   (update-state
    obj
    :agent-vfx-col
