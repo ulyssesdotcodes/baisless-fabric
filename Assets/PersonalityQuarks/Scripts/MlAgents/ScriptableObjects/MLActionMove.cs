@@ -25,7 +25,7 @@ class MLActionMove : MLAction {
         Vector3 dirToGo = Vector3.zero;
         Vector3 rotateDir = Vector3.zero;
 
-        if (agent.brain.brainParameters.vectorActionSpaceType == SpaceType.Continuous)
+        if (agent.brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
         {
             dirToGo = transform.forward * Mathf.Clamp(act[0], -1f, 1f);
             rotateDir = transform.up * Mathf.Clamp(act[1], -1f, 1f);
@@ -72,5 +72,7 @@ class MLActionMove : MLAction {
 
         rigidbody.AddForce(dirToGo * MoveSpeedRand, ForceMode.VelocityChange);
         gameObject.transform.Rotate(rotateDir, Time.fixedDeltaTime * TurnSpeedRand);
+
+        agent.area.EventSystem.RaiseEvent(TransformEvent.Create(gameObject));
     }
 }

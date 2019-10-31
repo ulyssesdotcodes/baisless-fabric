@@ -7,8 +7,7 @@ static class AcademyParameters {
         if(academy.resetParameters.ContainsKey(key)) {
             return academy.resetParameters[key];
         } else {
-            float.TryParse(key, out float val);
-            return val;
+            return float.Parse(key);
         }
     }
 

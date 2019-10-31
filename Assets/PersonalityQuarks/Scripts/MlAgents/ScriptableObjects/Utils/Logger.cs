@@ -1,4 +1,6 @@
 using UnityEngine;
+using System;
+using System.Collections.Generic;
 
 public enum LogMessageType {
   Debug,
@@ -11,39 +13,20 @@ public struct Message {
   public string message;
 }
 
-[CreateAssetMenu(menuName="ML/Logger")]
-public class Logger : ScriptableObject {
-    public bool IsLoggingDebug;
-    public bool IsLoggingAgent;
-    public bool IsLoggingWorld;
+public class Logger : QuarkEventListener {
+  public List<QuarkEventType> LogTypes = new List<QuarkEventType>();
 
-    public void OnEnable() {
-        IsLoggingDebug = Debug.isDebugBuild && IsLoggingDebug;
-    }
+  public override int Id {
+    get { return -1; }
+  }
 
-    public virtual void Log(string message) {
-      Log(CreateMessage(LogMessageType.Debug, message));
+  public override void OnEvent(QuarkEvent e) {
+    switch(e.Type) {
+      case QuarkEventType.Transform:
+        TransformEvent ev = (TransformEvent)e;
+        Debug.Log(String.Concat(e.Id, " moved to ", ev.Position));
+        break;
     }
-
-    public virtual void Log(Message message) {
-        if(IsLoggingDebug) {
-            Debug.Log(message.message);
-        }
-    }
-
-    public virtual void Log(Message message, Canvas WorldCanvas) {
-      Log(message);
-    }
-
-    public virtual void Log(Message message, BaseAgent agent) {
-      Log(message);
-    }
-
-    public static Message CreateMessage(LogMessageType type, string text) {
-      Message message;
-      message.type = type;
-      message.message = text;
-      return message;
-    }
+  }
 
 }

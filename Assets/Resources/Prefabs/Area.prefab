@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6657664284516978822}
   - component: {fileID: 771306208755496466}
+  - component: {fileID: -2219747802704630753}
+  - component: {fileID: -5149608666463855332}
   m_Layer: 0
   m_Name: Area
   m_TagString: Untagged
@@ -45,6 +47,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StartY: 0
   academy: {fileID: 0}
+  EventSystem: {fileID: 0}
   AreaResets: []
-  Logger: {fileID: 11400000, guid: 35dd5dba5b1f9424fa178f7c137ae085, type: 2}
+  Logger: {fileID: 0}
   WorldCanvas: {fileID: 0}
+--- !u!114 &-2219747802704630753
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6657664284516978816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c7728637f8c43c49bfe1d048b073a50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Listeners:
+  - {fileID: -5149608666463855332}
+--- !u!114 &-5149608666463855332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6657664284516978816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1623dc8668e91dc468a8a8f15c48c88d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EventSystem: {fileID: 0}

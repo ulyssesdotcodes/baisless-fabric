@@ -24,8 +24,6 @@ public class BaseAgent : Agent, IResettable {
       }
       StartPosition = transform.position;
       StartRotation = transform.rotation;
-
-      InitializeAgent();
     }
 
     public override void InitializeAgent()
@@ -39,7 +37,7 @@ public class BaseAgent : Agent, IResettable {
         Quarks = QuarkGroup.Instantiate(Quarks);
         Quarks.Initialize(this);
 
-        area.Logger.Log(Logger.CreateMessage(LogMessageType.World, $"Initialized {Quarks.name} {gameObject.name}"), this); 
+        // TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.World, $"Initialized {Quarks.name} {gameObject.name}"), this); 
     }
 
     public override void CollectObservations() {
@@ -58,44 +56,46 @@ public class BaseAgent : Agent, IResettable {
     public void Reset()
     {
       RunResetMessage();
-      area.Logger.Log(System.String.Concat("Reset ", gameObject.transform.position.y));
+      //TAG: MakeEvent area.Logger.Log(System.String.Concat("Reset ", gameObject.transform.position.y));
       Quarks.Reset(this);
     }
 
     public void RunResetMessage() {
         if(ResetMessages.Count > 0) {
           string ResetMessage = ResetMessages[(int)Random.Range(0, ResetMessages.Count)];
-          area.Logger.Log(Logger.CreateMessage(LogMessageType.Agent, ResetMessage), this);
+          //TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.Agent, ResetMessage), this);
         } else {
-          area.Logger.Log(Logger.CreateMessage(LogMessageType.Agent, $"Hi, I'm {gameObject.name}"), this); 
+          //TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.Agent, $"Hi, I'm {gameObject.name}"), this); 
         }
     }
 
     public void OnTriggerEnter(Collider col) {
         if(ColliderTags.Contains(col.gameObject.tag)) {
-          area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran into {col.gameObject.tag}"), this); 
+          //TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran into {col.gameObject.tag}"), this); 
           TriggerCollider = col.Some();
         }
     }
 
     public void OnTriggerExit(Collider col) {
         if(ColliderTags.Contains(col.gameObject.tag)) {
-          area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran away from {col.gameObject.tag}"), this); 
+          //TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran away from {col.gameObject.tag}"), this); 
           TriggerCollider = Option.None<Collider>();
         }
     }
 
     public void OnCollisionEnter(Collision col) {
         if(ColliderTags.Contains(col.gameObject.tag)) {
-          area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran into {col.gameObject.name}"), this); 
+          //TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran into {col.gameObject.name}"), this); 
           TriggerCollider = col.collider.Some();
+          area.EventSystem.RaiseEvent(CollisionEnterEvent.Create(gameObject, col));
         }
     }
 
     public void OnCollisionExit(Collision col) {
         if(ColliderTags.Contains(col.gameObject.tag)) {
-          area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran away from {col.gameObject.name}"), this); 
+          //TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.Debug, $"Ran away from {col.gameObject.name}"), this); 
           TriggerCollider = Option.None<Collider>();
+          area.EventSystem.RaiseEvent(CollisionExitEvent.Create(gameObject, col));
         }
     }
 }

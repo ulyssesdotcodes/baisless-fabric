@@ -11,6 +11,9 @@ public class Area : MonoBehaviour
   [HideInInspector]
   public Academy academy;
 
+  [HideInInspector]
+  public QuarkEvents EventSystem;
+
   public AreaReset[] AreaResets;
 
   public Logger Logger;
@@ -18,6 +21,8 @@ public class Area : MonoBehaviour
 
   protected virtual void Start()
   {
+    EventSystem = GetComponent<QuarkEvents>();
+
     StartY = gameObject.transform.position.y;
     academy = FindObjectOfType<Academy>();
 
