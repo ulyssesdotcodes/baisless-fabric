@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 public class CljQuarkEventListener: QuarkEventListener {
-  Queue<QuarkEvent> EventQueue = new Queue<QuarkEvent>();
+  public Queue<QuarkEvent> EventQueue = new Queue<QuarkEvent>();
 
   public override int Id {
     get { return -1; }

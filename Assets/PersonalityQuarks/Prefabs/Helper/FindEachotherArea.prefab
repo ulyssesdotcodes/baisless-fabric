@@ -194,7 +194,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2550241553127057880}
-  - component: {fileID: 832737619}
   m_Layer: 0
   m_Name: FindEachotherArea
   m_TagString: Untagged
@@ -219,24 +218,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &832737619
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2550241553127057886}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d751f755d9a8504096495a5bf971f5b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartY: 0
-  academy: {fileID: 0}
-  SpawnNumberKeyVal: spawn_number
-  SpawnDistanceKeyVal: spawn_distance
-  CubeWall: {fileID: 1751790651857562764, guid: c0756a1d7e78bed4d890d4347a5436a3,
-    type: 3}
 --- !u!1 &2550241553426863912
 GameObject:
   m_ObjectHideFlags: 0
@@ -370,8 +351,10 @@ MonoBehaviour:
     resetOnDone: 1
     onDemandDecision: 0
     numberOfActionsBetweenDecisions: 2
-  Logger: {fileID: 11400000, guid: dd2161ac65f00e043bf35f9494678466, type: 2}
   Quarks: {fileID: 11400000, guid: 52fd7f6b2321ed142bc85f7c8070979b, type: 2}
+  ColliderTags: []
+  area: {fileID: 0}
+  ResetMessages: []
 --- !u!114 &2550241553426863913
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -409,7 +392,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Enable: 0
-  TargetCanvas: {fileID: 0}
   offsetY: 1.5
 --- !u!1 &2550241553468197811
 GameObject:
@@ -855,8 +837,10 @@ MonoBehaviour:
     resetOnDone: 1
     onDemandDecision: 0
     numberOfActionsBetweenDecisions: 2
-  Logger: {fileID: 11400000, guid: dd2161ac65f00e043bf35f9494678466, type: 2}
   Quarks: {fileID: 11400000, guid: 82b081722d0b534478d90a382515b041, type: 2}
+  ColliderTags: []
+  area: {fileID: 0}
+  ResetMessages: []
 --- !u!114 &2550241553971963562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -894,5 +878,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Enable: 0
-  TargetCanvas: {fileID: 0}
   offsetY: 1.5

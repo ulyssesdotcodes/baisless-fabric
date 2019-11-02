@@ -11,7 +11,9 @@
            [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
            [UnityEngine.UI Text]
            RectTransformUtility
-           BaseAgent))
+           BaseAgent
+           QuarkEvent
+           CljQuarkEventListener))
 
 (use 'game.core :reload)
 (use 'game.names :reload)
@@ -21,6 +23,62 @@
 (init)
 
 (deinit)
+
+(def eventlistener (cmpt (object-named "Area") CljQuarkEventListener))
+
+(defrole event-passer
+  :state { :listeners {} }
+  (update [obj k]
+    (let [listeners ((state obj k) :listeners)
+          queue (.EventQueue eventlistener)]
+      (when (> (.Count queue) 0)
+        (let [event (.Dequeue queue)
+              id-listeners (get (.Id event) :listeners '())
+              global-listeners (get -1 :listeners '())]
+          (doseq [listener listeners] 
+            (conj (state listener :events) event))
+          (doseq [listener global-listeners] 
+            (conj (state listener :events) event)))))))
+
+(defn add-listener 
+  [obj id]
+  (update-state 
+    (get-obj :passer) :event-passer 
+    (fn [passer] 
+      (let [listeners (passer :listeners)]
+        (update listeners id #(if (empty? %) '(obj) (conj % obj)))))))
+
+(rem-type :logger)
+
+(rem-obj :logger)
+
+(get-obj :passer)
+
+(:item (@bfstate :passer))
+
+(destroy! (object-named "Logger"))
+
+
+(do
+  (let [obj (new GameObject "Logger")]
+    (add-listener obj -1)
+    (role+ obj :log 
+      {:state {:events '()}
+       :update (fn [obj k] 
+           (let [events ((state obj k) :events)]
+             (doseq [e events] (Debug/Log (.Type e)))
+             (state+ obj :events '())))
+      })
+    (add-obj :logger :meta obj)))
+                 
+
+(do
+  (let [ obj (new GameObject "Passer")]
+    (add-obj :passer :meta obj)
+    (role+ obj :event-passer event-passer)))
+
+
+
  
 @bfstate 
 

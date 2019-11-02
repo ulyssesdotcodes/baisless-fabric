@@ -15,6 +15,8 @@
 
 (def bfstate (atom {}))
 
+(def area (object-named "Area"))
+
 ; Text that follows an object
 
 (defn follow-update [roleobj k]
@@ -75,7 +77,7 @@
 (defn get-obj [name] (:item (@bfstate name)))
 
 (defn instantiate-in-area [resource]
-  (UnityEngine.Object/Instantiate resource (.transform (get-in @bfstate [:area :item]))))
+  (UnityEngine.Object/Instantiate resource (.transform area)))
 
 
 ; time
@@ -118,11 +120,7 @@
    :meta
    (let [tk (new GameObject)]
      (role+ tk :time timekeeper-role)
-     tk))
-  (add-obj
-    :area
-    :meta
-    (instantiate (Resources/Load (str "Prefabs/Area")))))
+     tk)))
 
 ; Actions
 
