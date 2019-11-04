@@ -13,6 +13,9 @@
            RectTransformUtility
            BaseAgent
            QuarkEvent
+           QuarkEvents
+           QuarkEventType
+           TransformEvent ResetEvent
            CljQuarkEventListener))
 
 (use 'game.core :reload)
@@ -25,44 +28,96 @@
 (deinit)
 
 (def eventlistener (cmpt (object-named "Area") CljQuarkEventListener))
+(def render-area (object-named "RenderedScene"))
+
+(def qsystem (cmpt (object-named "Area") QuarkEventListener
 
 (defrole event-passer
   :state { :listeners {} }
   (update [obj k]
     (let [listeners ((state obj k) :listeners)
           queue (.EventQueue eventlistener)]
-      (when (> (.Count queue) 0)
+      (while (> (.Count queue) 0)
         (let [event (.Dequeue queue)
-              id-listeners (get (.Id event) :listeners '())
-              global-listeners (get -1 :listeners '())]
-          (doseq [listener listeners] 
-            (conj (state listener :events) event))
+              id-listeners (get listeners (.Id event) '())
+              global-listeners (get listeners -1 '())]
+          (doseq [listener id-listeners] 
+            (update-state listener :event-listener 
+              (fn [elistener] (update elistener :events #(conj % event)))))
           (doseq [listener global-listeners] 
-            (conj (state listener :events) event)))))))
+            (update-state listener :event-listener 
+              (fn [elistener] (update elistener :events #(conj % event))))))))))
+
 
 (defn add-listener 
   [obj id]
   (update-state 
     (get-obj :passer) :event-passer 
     (fn [passer] 
-      (let [listeners (passer :listeners)]
-        (update listeners id #(if (empty? %) '(obj) (conj % obj)))))))
+      (update passer :listeners 
+        (fn [listeners]  
+          (update listeners id #(if (empty? %) (set [obj]) (conj % obj))))))))
 
-(rem-type :logger)
+(defn add-skull [id]
+  (when (not (has-obj (str "Skull" id)))
+    (let [obj (instantiate (Resources/Load "Prefabs/Skull"))]
+      (role+ obj :event-listener 
+        {:state {:events '()}
+         :update (fn [obj k] 
+             (let [events ((state obj k) :events)]
+               (doseq [e events] 
+                 (when (== (.Type e) (enum-val QuarkEventType "Transform"))
+                   (set! (.localPosition (.transform obj)) (.Position e))
+                   (set! (.localScale (.transform obj)) (v3 3))))
+               (state+ obj k { :events '() })))
+        })
+      (add-listener obj id)
+      (parent! obj render-area)
+      (set! (.localPosition (.transform obj)) (v3 0 0 0))
+      (set! (.localScale (.transform obj)) (v3 4))
+      (set! (.rotation (.transform obj)) (euler (v3 30 180 0)))
+      (add-obj (str "Skull" id) :skull obj))))
+
+
+
+(do
+  (let [ obj (new GameObject "Passer")]
+    (add-obj :passer :meta obj)
+    (role+ obj :event-passer event-passer)))
+
+(Debug/Log (list render-area))
+
+(rem-obj :passer)
+(rem-obj :creator)
+
+(rem-type :skull)
+
+(rem-type :actor)
+
+(clear-listeners)
+
+(do
+  (let [obj (new GameObject "Creator")]
+    (role+ obj :event-listener 
+      {:state {:events '()}
+       :update (fn [obj k] 
+           (let [events ((state obj k) :events)]
+             (doseq [e events] 
+               (when (== (.Type e) (enum-val QuarkEventType "Reset"))
+                 (add-skull (.Id e))))
+             (state+ obj k { :events '() })))
+      })
+    (add-listener obj -1)
+    (add-obj :creator :meta obj)))
 
 (rem-obj :logger)
-
-(get-obj :passer)
-
-(:item (@bfstate :passer))
-
-(destroy! (object-named "Logger"))
-
+(rem-obj :passer)
+(rem-obj :creator)
 
 (do
   (let [obj (new GameObject "Logger")]
     (add-listener obj -1)
-    (role+ obj :log 
+    (role+ obj :event-listener 
       {:state {:events '()}
        :update (fn [obj k] 
            (let [events ((state obj k) :events)]
@@ -70,12 +125,115 @@
              (state+ obj :events '())))
       })
     (add-obj :logger :meta obj)))
-                 
+
+(rem-obj :logger)
+(rem-obj :passer)
+
+(get-obj :passer)
+
+(:item (@bfstate :passer))
+
+(defn clear-listeners [] (update-state (get-obj :passer) :event-passer
+  (fn [passer] (assoc passer :listeners {}))))
+
+(set! 
+  (.localPosition (.transform (object-named "Main Camera")))
+  (arcadia.linear/v3 16 0 -40))
+
+(role+ (object-named "pentagram")
+  :rotate
+  { :state { :speed 30 }, 
+    :update 
+     (fn [obj k] 
+       (let [{:keys [:speed]} (state obj k)]
+         (with-cmpt obj [tr Transform]
+           (set! (. tr rotation)
+                 (euler (v3 (* speed (bftime)) 30 (* speed (bftime))))))))})
+
+rrole+ (get-obj "Skull2")
+  :orbit
+  { :state { :speed 0.3 }, 
+    :update 
+     (fn [obj k] 
+       (let [{:keys [:speed]} (state obj k)]
+         (with-cmpt obj [tr Transform]
+           (set! (. tr localPosition)
+                 (v3 (* 20 (Mathf/Cos (+ 90 (* speed (bftime)))))
+                     (* 20 (Mathf/Sin (+ 90 (* speed (bftime)))))
+                            (.z (.position tr)))))
+         (.LookAt (.transform obj) (.transform (main-cam)))))})
+
+(settime 4)
+
+
+(role+ (object-named "pentagram")
+  :scale
+  { :state { :speed 2 }, 
+    :update 
+     (fn [obj k] 
+       (let [{:keys [:speed]} (state obj k)]
+         (with-cmpt obj [tr Transform]
+           (set! (. tr localScale)
+                 (v3 (* 64 (+ 16 (mod (* speed (bftime)) 16))))))))})
+
+(update-state (object-named "pentagram") :rotate
+  #(assoc % :speed 20))
+
+(settime 16)
+
+(role- (object-named "pentagram") :rotate)
+
+
+
+(def pentagram (object-named "pentagram"))
+
+(Resources/Load "Prefabs/Skull")
 
 (do
-  (let [ obj (new GameObject "Passer")]
-    (add-obj :passer :meta obj)
-    (role+ obj :event-passer event-passer)))
+  (let [obj (instantiate (Resources/Load "Prefabs/Skull"))]
+    (parent! obj render-area)
+    (set! (.localPosition (.transform obj)) (v3 16 -16 0))
+    (set! (.localScale (.transform obj)) (v3 12))
+    (set! (.rotation (.transform obj)) (euler (v3 30 180 0)))
+    (add-obj "Skull3" :skull obj)))
+
+
+(do 
+  (.LookAt (.transform (get-obj "Skull0")) (.transform (main-cam)))
+  (.LookAt (.transform (get-obj "Skull1")) (.transform (main-cam)))
+  (.LookAt (.transform (get-obj "Skull2")) (.transform (main-cam)))
+  (.LookAt (.transform (get-obj "Skull3")) (.transform (main-cam))))
+
+(do
+  (set! (.localScale (.transform (get-obj "Skull0"))) (v3 23))
+  (set! (.localScale (.transform (get-obj "Skull1"))) (v3 23))
+  (set! (.localScale (.transform (get-obj "Skull2"))) (v3 23))
+  (set! (.localScale (.transform (get-obj "Skull3"))) (v3 23)))
+
+(do
+  (set! (.rotation (.transform (get-obj "Skull0"))) (euler (v3 30 180 0)))
+
+(do
+  (let [obj (instantiate (Resources/Load "Prefabs/Skull"))]
+    (parent! obj pentagram)
+    (set! (.localPosition (.transform obj)) (v3 0))
+    (set! (.localScale (.transform obj)) (v3 0.05))
+    (set! (.localRotation (.transform obj)) (euler (v3 90 0 0)))
+    (.LookAt (.transform obj) (.transform (main-cam))))
+    (add-obj "Skull3" :skull obj)))
+
+(do (let [rend (cmpt (object-named "SkullLod1") Renderer)]
+        (set! (.material rend) (Resources/Load "Materials/Ghost"))))
+
+(role- (object-named "pentagram") :rotate)
+
+(do
+
+
+
+(destroy! (object-named "Logger"))
+(destroy! (object-named "Passer"))
+
 
 
 
@@ -83,7 +241,7 @@
 @bfstate 
 
 (rem-obj :timekeeper)
-(destroy! (GameObject/Find "Names"))
+(destroy! (GameObject/Find "Logger"))
 
 (bftime)
 

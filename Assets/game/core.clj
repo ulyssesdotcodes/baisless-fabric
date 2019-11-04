@@ -76,6 +76,8 @@
 
 (defn get-obj [name] (:item (@bfstate name)))
 
+(defn has-obj [name] (contains? (@bfstate name) :item))
+
 (defn instantiate-in-area [resource]
   (UnityEngine.Object/Instantiate resource (.transform area)))
 
@@ -88,8 +90,8 @@
 (defn bftime []
   ((state (get-in @bfstate [:timekeeper :item]) :time) :time))
 
-(defn rate []
-  ((state (get-in @bfstate [:timekeeper :item]) :time) :rate))
+(defn rate 
+  ([] ((state (get-in @bfstate [:timekeeper :item]) :time) :rate)))
 
 (defrole timekeeper-role
   :state {:time 0 :rate 1}
