@@ -1,5 +1,5 @@
 (ns game.scratch
-  (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam)
+  (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam game.events)
   (:import [UnityEngine Physics
             GameObject Input
             Vector2 Mathf Resources Transform
@@ -23,118 +23,34 @@
 (use 'game.personalities :reload)
 (use 'game.cam :reload)
 
-(init)
+(use 'game.events :reload)
+
+(do
+  (init)
+  (init-event-passer))
 
 (deinit)
 
-(def eventlistener (cmpt (object-named "Area") CljQuarkEventListener))
-(def render-area (object-named "RenderedScene"))
-
-(def qsystem (cmpt (object-named "Area") QuarkEventListener
-
-(defrole event-passer
-  :state { :listeners {} }
-  (update [obj k]
-    (let [listeners ((state obj k) :listeners)
-          queue (.EventQueue eventlistener)]
-      (while (> (.Count queue) 0)
-        (let [event (.Dequeue queue)
-              id-listeners (get listeners (.Id event) '())
-              global-listeners (get listeners -1 '())]
-          (doseq [listener id-listeners] 
-            (update-state listener :event-listener 
-              (fn [elistener] (update elistener :events #(conj % event)))))
-          (doseq [listener global-listeners] 
-            (update-state listener :event-listener 
-              (fn [elistener] (update elistener :events #(conj % event))))))))))
-
-
-(defn add-listener 
-  [obj id]
-  (update-state 
-    (get-obj :passer) :event-passer 
-    (fn [passer] 
-      (update passer :listeners 
-        (fn [listeners]  
-          (update listeners id #(if (empty? %) (set [obj]) (conj % obj))))))))
-
-(defn add-skull [id]
-  (when (not (has-obj (str "Skull" id)))
-    (let [obj (instantiate (Resources/Load "Prefabs/Skull"))]
-      (role+ obj :event-listener 
-        {:state {:events '()}
-         :update (fn [obj k] 
-             (let [events ((state obj k) :events)]
-               (doseq [e events] 
-                 (when (== (.Type e) (enum-val QuarkEventType "Transform"))
-                   (set! (.localPosition (.transform obj)) (.Position e))
-                   (set! (.localScale (.transform obj)) (v3 3))))
-               (state+ obj k { :events '() })))
-        })
-      (add-listener obj id)
-      (parent! obj render-area)
-      (set! (.localPosition (.transform obj)) (v3 0 0 0))
-      (set! (.localScale (.transform obj)) (v3 4))
-      (set! (.rotation (.transform obj)) (euler (v3 30 180 0)))
-      (add-obj (str "Skull" id) :skull obj))))
-
-
-
-(do
-  (let [ obj (new GameObject "Passer")]
-    (add-obj :passer :meta obj)
-    (role+ obj :event-passer event-passer)))
-
-(Debug/Log (list render-area))
-
-(rem-obj :passer)
-(rem-obj :creator)
-
-(rem-type :skull)
-
 (rem-type :actor)
 
-(clear-listeners)
 
-(do
-  (let [obj (new GameObject "Creator")]
-    (role+ obj :event-listener 
-      {:state {:events '()}
-       :update (fn [obj k] 
-           (let [events ((state obj k) :events)]
-             (doseq [e events] 
-               (when (== (.Type e) (enum-val QuarkEventType "Reset"))
-                 (add-skull (.Id e))))
-             (state+ obj k { :events '() })))
-      })
-    (add-listener obj -1)
-    (add-obj :creator :meta obj)))
+(add-personality "Test" "DanceFloor/Mover")
 
-(rem-obj :logger)
-(rem-obj :passer)
-(rem-obj :creator)
+(clear-event-listeners)
 
-(do
-  (let [obj (new GameObject "Logger")]
-    (add-listener obj -1)
-    (role+ obj :event-listener 
-      {:state {:events '()}
-       :update (fn [obj k] 
-           (let [events ((state obj k) :events)]
-             (doseq [e events] (Debug/Log (.Type e)))
-             (state+ obj :events '())))
-      })
-    (add-obj :logger :meta obj)))
+(rem-type :puppet)
+(rem-obj :mover-capsule)
+(rem-type :creator)
 
-(rem-obj :logger)
-(rem-obj :passer)
+(defn position-event [obj e]
+  (when (= (.Type e) (enum-val QuarkEventType "Transform"))
+    (set! (-> obj .transform .localPosition) (.Position e))))
 
-(get-obj :passer)
+(rem-obj :event-passer)
 
-(:item (@bfstate :passer))
-
-(defn clear-listeners [] (update-state (get-obj :passer) :event-passer
-  (fn [passer] (assoc passer :listeners {}))))
+(create-creator
+  :mover-capsule (Resources/Load "Prefabs/spider") "Mover(Clone)"
+  [#'position-event])
 
 (set! 
   (.localPosition (.transform (object-named "Main Camera")))

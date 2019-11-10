@@ -48,9 +48,9 @@
 
 (defn rem-obj [n]
   (let [obj (@bfstate n)]
+    (swap! bfstate dissoc n)
     (when (= (:type obj) :actor) (destroy! (:item (@bfstate (str n "-title")))))
-    (destroy! (:item obj))
-    (swap! bfstate dissoc n)))
+    (destroy! (:item obj))))
 
 (defn rem-type [type]
   (doseq [k (keys @bfstate)] (when (= (get-in @bfstate [k :type]) type) (rem-obj k))))

@@ -1,6 +1,8 @@
 #Custom
 [Aa]ssets/gitignored/
+[Aa]ssets/Mixamo/
 [Aa]ssets/gitignored/**/*.meta
+Cute_Robot_2/
 
 #Arcadia
 # [Aa]ssets/Arcadia
