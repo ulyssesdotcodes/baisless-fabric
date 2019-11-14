@@ -63,14 +63,16 @@
    (let [n (if (not= norig :uniq) norig (get-instance-id obj))]
      (rem-obj n)
      (swap! bfstate assoc n {:type type, :item obj})
-     (when (= type :actor)
-       (do (set! (.name obj) n) (title-follow n obj)))
      obj))
-  ([n type obj pos] 
-   (add-obj n type obj) 
+  ([n type obj show-name]
+   (add-obj n type obj)
+   (set! (.name obj) n) 
+   (title-follow n obj))
+  ([n type obj show-name pos] 
+   (add-obj n type obj show-name ) 
    (position! obj pos))
-  ([n type obj pos rot] 
-   (add-obj n type obj pos) 
+  ([n type obj show-name pos rot] 
+   (add-obj n type obj show-name pos) 
    (rotation! obj (Quaternion/Euler (.x rot) (.y rot) (.z rot)))))
 
 

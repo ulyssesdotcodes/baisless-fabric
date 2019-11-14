@@ -8,10 +8,8 @@ public class Area : MonoBehaviour
   [HideInInspector]
   public float StartY;
 
-  [HideInInspector]
   public Academy academy;
 
-  [HideInInspector]
   public QuarkEvents EventSystem;
 
   public AreaReset[] AreaResets;

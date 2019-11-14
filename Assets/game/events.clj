@@ -1,6 +1,6 @@
 (ns game.events
   (use arcadia.core arcadia.linear hard.core game.core)
-  (:import [UnityEngine Debug]
+  (:import [UnityEngine Debug Resources]
     QuarkEvent 
     CljQuarkEventListener
     QuarkEvents
@@ -54,18 +54,19 @@
   (fn [passer] (assoc passer :listeners {}))))
 
 
-(defn create-event-listener [source id fns]
-  (let [obj (instantiate source)
+(defn create-event-listener [source id create-fn fns]
+  (let [obj (instantiate (Resources/Load source))
         efns (map (fn [efn] (add-event-listener id #(efn obj %))) fns)]
     (role+ obj :event-listener
       { 
        :state { :fns efns }
        :destroy (fn [obj k] (map #(remove-event-listener id %) (:fns (state obj k))))
       })
+    (create-fn obj)
     (parent! obj render-area)
-    (add-obj (str "Puppet" id) :puppet obj)))
+    ))
 
-(defn create-creator [creator-name source obj-name fns]
+(defn create-creator [creator-name source obj-name create-fn fns]
   (let [obj (new GameObject (str "Creator(" obj-name ")"))
         efn (add-event-listener 
               -1
@@ -77,6 +78,7 @@
                    (create-event-listener 
                      source
                      (.Id e) 
+                     create-fn
                      ((state obj :creator) :efns))
                    )))]
 

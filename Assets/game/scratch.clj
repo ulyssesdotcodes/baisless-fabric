@@ -34,7 +34,6 @@
 (rem-type :actor)
 
 
-(add-personality "Test" "DanceFloor/Mover")
 
 (clear-event-listeners)
 
@@ -42,109 +41,56 @@
 (rem-obj :mover-capsule)
 (rem-type :creator)
 
-(defn position-event [obj e]
+(defn spherical-position-event [obj e]
   (when (= (.Type e) (enum-val QuarkEventType "Transform"))
     (set! (-> obj .transform .localPosition) (.Position e))))
 
+(defn spherical-position-event [obj e]
+  (when (= (.Type e) (enum-val QuarkEventType "Transform"))
+    (set! (-> obj .transform .localPosition) 
+          (let [t (* Mathf/PI (/ (+ (.x (.Position e)) 40) 80))
+                p (* 2 (* Mathf/PI (/ (+ (.z (.Position e)) 40) 80)))
+                r 20]
+            (v3 
+              (* r (Mathf/Sin t) (Mathf/Cos p)) 
+              (* r (Mathf/Sin t) (Mathf/Sin p)) 
+              (* r (Mathf/Cos t)))))))
+
+(defn collision-event [obj e]
+  (when (= (.Type e) (enum-val QuarkEventType "Collision"))
+    (set! (-> obj .transform .localPosition) (.Position e))))
+
+
 (rem-obj :event-passer)
 
+(defn standard-creator [n prefab]
+  (create-creator
+    :mover-capsule 
+    (str "Prefabs/" prefab)
+    (str n "(Clone)")
+    (fn [obj] 
+      (add-obj (randomname) :puppet obj true))
+    [#'spherical-position-event]))
+
+(rem-type :creator)
+
+(standard-creator "Mover" "GlowLight")
+(standard-creator "Spacer" "spider")
+(standard-creator "Attractor" "Skull")
+
+(add-personality "Test2" "DanceFloor/Mover")
+
 (create-creator
-  :mover-capsule (Resources/Load "Prefabs/spider") "Mover(Clone)"
-  [#'position-event])
+  :mover-capsule (create-primitive :sphere) "Mover(Clone)"
+  (fn [obj k] 
+    (add-obj #(randomname) :puppet obj true))
+  [#'spherical-position-event])
 
 (set! 
   (.localPosition (.transform (object-named "Main Camera")))
   (arcadia.linear/v3 16 0 -40))
 
-(role+ (object-named "pentagram")
-  :rotate
-  { :state { :speed 30 }, 
-    :update 
-     (fn [obj k] 
-       (let [{:keys [:speed]} (state obj k)]
-         (with-cmpt obj [tr Transform]
-           (set! (. tr rotation)
-                 (euler (v3 (* speed (bftime)) 30 (* speed (bftime))))))))})
-
-rrole+ (get-obj "Skull2")
-  :orbit
-  { :state { :speed 0.3 }, 
-    :update 
-     (fn [obj k] 
-       (let [{:keys [:speed]} (state obj k)]
-         (with-cmpt obj [tr Transform]
-           (set! (. tr localPosition)
-                 (v3 (* 20 (Mathf/Cos (+ 90 (* speed (bftime)))))
-                     (* 20 (Mathf/Sin (+ 90 (* speed (bftime)))))
-                            (.z (.position tr)))))
-         (.LookAt (.transform obj) (.transform (main-cam)))))})
-
 (settime 4)
-
-
-(role+ (object-named "pentagram")
-  :scale
-  { :state { :speed 2 }, 
-    :update 
-     (fn [obj k] 
-       (let [{:keys [:speed]} (state obj k)]
-         (with-cmpt obj [tr Transform]
-           (set! (. tr localScale)
-                 (v3 (* 64 (+ 16 (mod (* speed (bftime)) 16))))))))})
-
-(update-state (object-named "pentagram") :rotate
-  #(assoc % :speed 20))
-
-(settime 16)
-
-(role- (object-named "pentagram") :rotate)
-
-
-
-(def pentagram (object-named "pentagram"))
-
-(Resources/Load "Prefabs/Skull")
-
-(do
-  (let [obj (instantiate (Resources/Load "Prefabs/Skull"))]
-    (parent! obj render-area)
-    (set! (.localPosition (.transform obj)) (v3 16 -16 0))
-    (set! (.localScale (.transform obj)) (v3 12))
-    (set! (.rotation (.transform obj)) (euler (v3 30 180 0)))
-    (add-obj "Skull3" :skull obj)))
-
-
-(do 
-  (.LookAt (.transform (get-obj "Skull0")) (.transform (main-cam)))
-  (.LookAt (.transform (get-obj "Skull1")) (.transform (main-cam)))
-  (.LookAt (.transform (get-obj "Skull2")) (.transform (main-cam)))
-  (.LookAt (.transform (get-obj "Skull3")) (.transform (main-cam))))
-
-(do
-  (set! (.localScale (.transform (get-obj "Skull0"))) (v3 23))
-  (set! (.localScale (.transform (get-obj "Skull1"))) (v3 23))
-  (set! (.localScale (.transform (get-obj "Skull2"))) (v3 23))
-  (set! (.localScale (.transform (get-obj "Skull3"))) (v3 23)))
-
-(do
-  (set! (.rotation (.transform (get-obj "Skull0"))) (euler (v3 30 180 0)))
-
-(do
-  (let [obj (instantiate (Resources/Load "Prefabs/Skull"))]
-    (parent! obj pentagram)
-    (set! (.localPosition (.transform obj)) (v3 0))
-    (set! (.localScale (.transform obj)) (v3 0.05))
-    (set! (.localRotation (.transform obj)) (euler (v3 90 0 0)))
-    (.LookAt (.transform obj) (.transform (main-cam))))
-    (add-obj "Skull3" :skull obj)))
-
-(do (let [rend (cmpt (object-named "SkullLod1") Renderer)]
-        (set! (.material rend) (Resources/Load "Materials/Ghost"))))
-
-(role- (object-named "pentagram") :rotate)
-
-(do
-
 
 
 (destroy! (object-named "Logger"))
@@ -205,7 +151,7 @@ rrole+ (get-obj "Skull2")
 (map #(add-personality % "DanceFloor/Spacer") (take 10 (repeatedly #(randomname)))) 
 (map #(add-personality % "DanceFloor/Attractor") (take 10 (repeatedly #(randomname))))
 
-  (map #(add-personality % "DanceFloor/Avoider") (take 10 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Avoider") (take 10 (repeatedly #(randomname)))) 
 
 (map #(add-personality % "graffiti/Blue") (take 10 (repeatedly #(randomname))))) 
 

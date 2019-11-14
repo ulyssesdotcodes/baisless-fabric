@@ -16,6 +16,26 @@ TagManager:
   - wall
   - target
   - canvas
+  - block
+  - goal
+  - agent
+  - banana
+  - stone
+  - pyramid
+  - walkableSurface
+  - blueAgent
+  - blueGoal
+  - redGoal
+  - ball
+  - orangeGoal
+  - orangeBlock
+  - redBlock
+  - iWall
+  - switchOff
+  - badBanana
+  - pit
+  - blueactorfind
+  - redactorfind
   layers:
   - Default
   - TransparentFX

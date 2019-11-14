@@ -35,6 +35,5 @@
 
 (defn add-personality [name type]
   (let [actor (instantiate-in-area (Resources/Load (str "Prefabs/Personalities/" type)))]
-    (add-agent-vfx-col actor)
     (state+ actor :actor-type type)
     (add-obj name :actor actor)))

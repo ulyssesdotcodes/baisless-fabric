@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7db5a2c0101b0419d803670f00cc1992, type: 3}
   m_Name: FindRedAsBlue
   m_EditorClassIdentifier: 
-  Tag: redactor
+  RequiresTag: 
+  Tag: redactorfind
+  NewTag: 
   Label: 
   LabelPrevents: 
   RewardKeyVal: 2
@@ -26,3 +28,7 @@ MonoBehaviour:
   ResetAreaIfAlreadyThere: 0
   DoneIfAlreadyThere: 0
   ResetArea: 1
+  Cooldown: 5
+  RunResetMessage: 0
+  AgentCollisionMessage: 
+  LabelValue: 0

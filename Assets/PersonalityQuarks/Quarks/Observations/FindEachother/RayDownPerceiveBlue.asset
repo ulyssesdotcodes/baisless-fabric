@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RayDownPerceiveBlue
   m_EditorClassIdentifier: 
   DetectableObjects:
-  - blueactor
+  - blueactorfind
   - wall
   - ground
   rayAngles:
