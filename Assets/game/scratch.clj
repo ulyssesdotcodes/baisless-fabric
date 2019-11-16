@@ -5,7 +5,7 @@
             Vector2 Mathf Resources Transform
             PrimitiveType Collider Light Renderer
             Color Application Debug Time Canvas LightType
-            Quaternion Rigidbody Camera]
+            Quaternion Rigidbody Camera Shader]
            [UnityEngine.Experimental.VFX VisualEffect VFXEventAttribute]
            [UnityEngine.Rendering Volume]
            [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
@@ -29,56 +29,97 @@
   (init)
   (init-event-passer))
 
-(deinit)
+(do 
+  (rem-type :actor)
+  (rem-type :puppet)
+  (rem-type :creator))
 
-(rem-type :actor)
-
-
-
-(clear-event-listeners)
-
-(rem-type :puppet)
-(rem-obj :mover-capsule)
-(rem-type :creator)
-
-(defn spherical-position-event [obj e]
+(defn position-event [obj e]
   (when (= (.Type e) (enum-val QuarkEventType "Transform"))
-    (set! (-> obj .transform .localPosition) (.Position e))))
+    (let [pos (pos-to-spherical (.Position e))]
+       (let [vfxcmpt (cmpt obj VisualEffect)
+             vfxevent (.CreateVFXEventAttribute vfxcmpt)
+             color (state obj :color)]
+         (.SetVector4 vfxcmpt "Color" (v4 (.r color) (.g color) (.b color) 1))
+         (.SetFloat vfxcmpt "Lifetime" (mod (bftime) 2))
+         (.SetFloat vfxcmpt "Turbulence" (mod (* (bftime) 50) 100))
+         (.SendEvent vfxcmpt "OnPosition" vfxevent))
+      (set! (-> obj .transform .localPosition) pos)
+      (set! (-> obj .transform .rotation) (.Rotation e)))))
 
-(defn spherical-position-event [obj e]
-  (when (= (.Type e) (enum-val QuarkEventType "Transform"))
-    (set! (-> obj .transform .localPosition) 
-          (let [t (* Mathf/PI (/ (+ (.x (.Position e)) 40) 80))
-                p (* 2 (* Mathf/PI (/ (+ (.z (.Position e)) 40) 80)))
-                r 20]
-            (v3 
-              (* r (Mathf/Sin t) (Mathf/Cos p)) 
-              (* r (Mathf/Sin t) (Mathf/Sin p)) 
-              (* r (Mathf/Cos t)))))))
+(defn pos-to-spherical [pos]
+  (let [t (* Mathf/PI (/ (+ (.x pos) 40) 80))
+        p (* 2 (* Mathf/PI (/ (+ (.z pos) 40) 80)))
+        r 40]
+    (v3 
+      (* r (Mathf/Sin t) (Mathf/Cos p)) 
+      (* r (Mathf/Sin t) (Mathf/Sin p)) 
+      (* r (Mathf/Cos t)))))
 
-(defn collision-event [obj e]
-  (when (= (.Type e) (enum-val QuarkEventType "Collision"))
-    (set! (-> obj .transform .localPosition) (.Position e))))
+(defn collision-vfx-event [obj e]
+  (when (= (.Type e) (enum-val QuarkEventType "CollisionEnter"))
+    (state+ obj :color-old (state obj :color))
+    (state+ obj :color Color/red)))
 
+(defn reset-event [obj e]
+  (when (= (.Type e) (enum-val QuarkEventType "Reset"))
+    (state+ obj :reset-time (bftime))
+    (state+ obj :reset-color-old (state obj :color))
+    (state+ obj :color Color/red)))
+
+(defn collision-exit-vfx-event [obj e]
+  (when (= (.Type e) (enum-val QuarkEventType "CollisionExit"))
+    (state+ obj :color (state obj :color-old))))
+
+(defn tag-color-event [obj e]
+  (when (= (.Type e) (enum-val QuarkEventType "Tag"))
+    (case (.Tag e)
+      "redactor" (state+ obj :color Color/red)
+      "redactorfind" (state+ obj :color Color/red)
+      "blueactor" (state+ obj :color Color/blue)
+      "blueactorfind" (state+ obj :color Color/blue))))
+
+(defn live [obj e] 
+  (when (> (- (bftime) (state obj :reset-time)) 0.2)
+    (state+ obj :color (state obj :reset-color-old))))
 
 (rem-obj :event-passer)
 
-(defn standard-creator [n prefab]
+(defn standard-creator [n prefab color]
   (create-creator
-    :mover-capsule 
+    n
     (str "Prefabs/" prefab)
     (str n "(Clone)")
     (fn [obj] 
+      (state+ obj :color color)
+      (state+ obj :color-old color)
+      (state+ obj :reset-color-old color)
+      (state+ obj :reset-time 0)
       (add-obj (randomname) :puppet obj true))
-    [#'spherical-position-event]))
+    [#'position-event
+     #'tag-color-event
+     #'collision-vfx-event
+     #'collision-exit-vfx-event
+     #'live]))
 
 (rem-type :creator)
 
-(standard-creator "Mover" "GlowLight")
-(standard-creator "Spacer" "spider")
-(standard-creator "Attractor" "Skull")
+(standard-creator "Attractor" "Drones/Robot_Collector" Color/yellow)
 
-(add-personality "Test2" "DanceFloor/Mover")
+(standard-creator "Mover" "Drones/Robot_Scout" Color/green)
+
+(standard-creator "Avoider" "Drones/Robot_Guardian" Color/white)
+
+(do 
+  (standard-creator "Mover" "Drones/Robot_Scout" Color/green)
+  (standard-creator "Attractor" "Drones/Robot_Collector" Color/yellow)
+  (standard-creator "Avoider" "Drones/Robot_Guardian" Color/yellow)
+  (standard-creator "Speedy" "Drones/Robot_Invader" (new Color 1 0 1)))
+
+(standard-creator "TagGame" "Drones/Robot_Scout" (new Color 1 0 1))
+
+(standard-creator "Blue" "Drones/Robot_Guardian" Color/blue)
+(standard-creator "Red" "Drones/Robot_Guardian" Color/red)
 
 (create-creator
   :mover-capsule (create-primitive :sphere) "Mover(Clone)"
@@ -140,28 +181,38 @@
 
 (init) 
 (deinit)
+
 (do
   (add-personality "Ursula" "FindEachother/HelperBlue")
   (add-personality "Jack" "FindEachother/HelperRed"))
 
 (add-personality "Test" "DanceFloor/Mover")
 
-(map #(add-personality % "DanceFloor/Mover") (take 10 (repeatedly #(randomname)))) 
-(map #(add-personality % "DanceFloor/Speedster") (take 10 (repeatedly #(randomname)))) 
-(map #(add-personality % "DanceFloor/Spacer") (take 10 (repeatedly #(randomname)))) 
-(map #(add-personality % "DanceFloor/Attractor") (take 10 (repeatedly #(randomname))))
+(add-personality "Wencke" "DanceFloor/Mover")
 
-(map #(add-personality % "DanceFloor/Avoider") (take 10 (repeatedly #(randomname)))) 
+(rem-type :actor)
 
-(map #(add-personality % "graffiti/Blue") (take 10 (repeatedly #(randomname))))) 
+(map #(add-personality % "DanceFloor/Mover") (take 3 (repeatedly #(randomname)))) 
 
+(map #(add-personality % "DanceFloor/Mover") (take 3 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Speedster") (take 6 (repeatedly #(randomname)))) 
+(map #(add-personality % "DanceFloor/Spacer") (take 3 (repeatedly #(randomname)))) 
+
+(map #(add-personality % "DanceFloor/Attractor") (take 1 (repeatedly #(randomname))))
+
+(map #(add-personality % "DanceFloor/Avoider") (take 5 (repeatedly #(randomname)))) 
+
+(map #(add-personality % "graffiti/Blue") (take 10 (repeatedly #(randomname))))
 (map #(add-personality % "graffiti/Red") (take 10 (repeatedly #(randomname)))) 
+
+(map #(add-personality % "TagGame/It") (take 1 (repeatedly #(randomname))))
+(map #(add-personality % "TagGame/NotIt") (take 20 (repeatedly #(randomname)))) 
 
 
 
 (do
-  (add-personality (randomname) "FindeachotherBlue")
-  (add-personality (randomname) "FindeachotherRed"))
+  (add-personality (randomname) "FindEachother/Helper Red")
+  (add-personality (randomname) "FindEachother/Helper Blue"))
 
 (map #(add-personality % "GraffitiBlue") (take 10 (repeatedly #(randomname)))) 
 (map #(add-personality % "GraffitiRed") (take 10 (repeatedly #(randomname)))) 
@@ -316,11 +367,11 @@
 (init)
 (map #(add-personality % "Attractor") (take 10 (repeatedly #(randomname))))
 
-(main-cam)
+(set! (.position (.transform (main-cam))) (v3 0 20 -40))
 
 (get-obj "Aura")
 
-(follow-cam "Diamond")
+(follow-cam "Trinity")
 
 (unfollow-cam)
 

@@ -37,8 +37,7 @@ public class BaseAgent : Agent, IResettable {
         Quarks = QuarkGroup.Instantiate(Quarks);
         Quarks.Initialize(this);
 
-        Debug.Log(area);
-        Debug.Log(area.EventSystem);
+        Debug.Log(Quarks.name);
         area.EventSystem.RaiseEvent(CreateEvent.Create(Quarks.name, gameObject));
 
         // TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.World, $"Initialized {Quarks.name} {gameObject.name}"), this); 

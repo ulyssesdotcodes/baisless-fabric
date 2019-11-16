@@ -14,24 +14,10 @@
 
 (defn add-agent-vfx-col [obj]
   (set! (.visualEffectAsset (cmpt+ obj VisualEffect)) (Resources/Load "VFX/AgentCollision"))
-  (role+ obj :agent-vfx-col on-collision)
   (state+
    obj :agent-vfx-col-color
    (let [color (.color (.material (cmpt obj Renderer)))]
-     (v3 (.r color) (.g color) (.b color))))
-  (update-state
-   obj
-   :agent-vfx-col
-   #(assoc
-     % :fn
-     (fn [obj col]
-       (let [vfxcmpt (cmpt obj VisualEffect)
-             vfxevent (.CreateVFXEventAttribute vfxcmpt)
-             rigidbody (cmpt obj Rigidbody)]
-         (.SetVector3 vfxevent "position" (.point (.GetContact col 0)))
-         (.SetVector3 vfxevent "color" (state obj :agent-vfx-col-color))
-         (.SetVector3 vfxevent "velocity" (.velocity rigidbody))
-         (.SendEvent vfxcmpt "OnCollision" vfxevent))))))
+     (v3 (.r color) (.g color) (.b color)))))
 
 (defn add-personality [name type]
   (let [actor (instantiate-in-area (Resources/Load (str "Prefabs/Personalities/" type)))]

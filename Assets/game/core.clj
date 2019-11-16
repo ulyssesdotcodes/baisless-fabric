@@ -46,14 +46,24 @@
 
 ; Adding objects
 
-(defn rem-obj [n]
-  (let [obj (@bfstate n)]
-    (swap! bfstate dissoc n)
-    (when (= (:type obj) :actor) (destroy! (:item (@bfstate (str n "-title")))))
-    (destroy! (:item obj))))
+(defn rem-obj 
+  ([n]
+    (let [obj (@bfstate n)]
+      (swap! bfstate dissoc n)
+      (when (= (:type obj) :actor) (destroy! (:item (@bfstate (str n "-title")))))
+      (destroy! (:item obj))))
+  ([n show]
+    (let [obj (@bfstate n)]
+      (swap! bfstate dissoc n)
+      (destroy! (:item (@bfstate (str n "-title"))))
+      (destroy! (:item obj)))))
 
-(defn rem-type [type]
-  (doseq [k (keys @bfstate)] (when (= (get-in @bfstate [k :type]) type) (rem-obj k))))
+(defn rem-type 
+  ([type]
+    (doseq [k (keys @bfstate)] (when (= (get-in @bfstate [k :type]) type) (rem-obj k))))
+  ([type show]
+    (doseq [k (keys @bfstate)] (when (= (get-in @bfstate [k :type]) type) (rem-obj k show)))))
+
 
 (defn get-instance-id [^UnityEngine.GameObject obj] 
   (str (.GetInstanceID obj)))
