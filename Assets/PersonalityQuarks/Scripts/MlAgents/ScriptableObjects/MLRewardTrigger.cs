@@ -5,7 +5,6 @@ using System;
 
 [CreateAssetMenu(menuName="ML/Rewards/Trigger")]
 class MLRewardTrigger : MLReward {
-    public string RequiresTag;
     public string Tag;
     public string NewTag;
     public string Label;
@@ -22,6 +21,7 @@ class MLRewardTrigger : MLReward {
     public bool DoneIfAlreadyThere = false;
     public bool ResetArea = true;
     public float Cooldown = 5f;
+    public string CooldownSelfTag;
     public bool RunResetMessage = false;
 
     public string AgentCollisionMessage = "";
@@ -72,7 +72,6 @@ class MLRewardTrigger : MLReward {
 
         Option<GameObject> triggerColCont = 
             agent.TriggerCollider
-                .Filter(tc => RequiresTag == "" || PreviousFrameTag  == RequiresTag)
                 .Filter(tc => tc != null)
                 .Map(tc => tc.gameObject)
                 .Filter(gob => gob.tag == Tag);
@@ -121,11 +120,14 @@ class MLRewardTrigger : MLReward {
                     agent.area.EventSystem.RaiseEvent(TaggingEvent.Create(agent.gameObject, NewTag));
                 }
             });
+
+        ObservableFields selfFields = agent.gameObject.GetComponent<ObservableFields>();
         
         triggerCol
             .FlatMap(tc => tc.GetComponent<ObservableFields>().SomeNotNull())
             .MatchSome(lc => {
-                if(lc.FieldsHash.ContainsKey(Label) && Time.time - lc.FieldsHash[Label] < Cooldown) {
+                if(lc.FieldsHash.ContainsKey(Label) && Time.time - lc.FieldsHash[Label] < Cooldown
+                    ) {
                     //TAG: MakeEvent myArea.Logger.Log(String.Concat("already there ", Label));
                     if(Toggle) {
                         //TAG: MakeEvent myArea.Logger.Log(String.Concat("Removing label ", Label));
@@ -144,7 +146,9 @@ class MLRewardTrigger : MLReward {
                         //TAG: MakeEvent myArea.Logger.Log(String.Concat("Resetting already there ", agent.gameObject.tag));
                         myArea.ResetArea();
                     }
-                } else if (!lc.FieldsHash.ContainsKey(LabelPrevents)) {
+                } else if (!lc.FieldsHash.ContainsKey(LabelPrevents) && !lc.FieldsHash.ContainsKey(Label) && 
+                    (CooldownSelfTag == "" || selfFields == null || !selfFields.FieldsHash.ContainsKey(CooldownSelfTag) || 
+                                               Time.time - selfFields.FieldsHash[CooldownSelfTag] < Cooldown)) {
                     //TAG: MakeEvent myArea.Logger.Log(String.Concat("Adding reward ", Reward));
                     agent.AddReward(Reward);
                     if(Label != "") {

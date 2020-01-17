@@ -5,12 +5,14 @@ using MLAgents;
 [CreateAssetMenu(menuName="ML/Rewards/Leave Playarea")]
 class MLRewardLeavePlayarea : MLReward {
     public float Amount;
+    public float AmountY;
     public float LimitX;
     public float LimitZ;
     public float LimitY;
     public float PositionY;
     public bool Reset;
     public bool Done;
+    public bool Wrap;
     public string AgentLeaveMessage = "Wheeeee!";
         
     public Area myArea;
@@ -28,7 +30,7 @@ class MLRewardLeavePlayarea : MLReward {
         }
 
         if(Mathf.Abs(agent.gameObject.transform.localPosition.y - PositionY) > LimitY) {
-            agent.AddReward(Amount);
+            agent.AddReward(AmountY);
             isOut = true;
         }
 
@@ -39,6 +41,14 @@ class MLRewardLeavePlayarea : MLReward {
             isOut = true;
         }
 
+        if(isOut && Wrap) {
+          agent.gameObject.transform.position= new Vector3(
+            FuckCSharpModulo(agent.gameObject.transform.position.x + LimitX, LimitX * 2) - LimitX,
+            FuckCSharpModulo(agent.gameObject.transform.position.y + LimitY, LimitY * 2) - LimitY,
+            FuckCSharpModulo(agent.gameObject.transform.position.z + LimitZ, LimitZ * 2) - LimitZ
+          );
+        }
+
         if(isOut && Done) {
             agent.Done();
         }
@@ -46,5 +56,9 @@ class MLRewardLeavePlayarea : MLReward {
         if(isOut && Reset) {
             agent.Reset();
         }
+    }
+
+    private float FuckCSharpModulo(float a, float b) {
+      return a - b * Mathf.Floor(a / b);
     }
 }

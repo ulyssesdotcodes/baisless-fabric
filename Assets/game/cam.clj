@@ -6,8 +6,8 @@
             PrimitiveType Collider Light Renderer
             Color Application Debug Time Canvas LightType
             Quaternion Rigidbody Camera]
-           [UnityEngine.Experimental.VFX VisualEffect VFXEventAttribute]
-           [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
+           [UnityEngine.VFX VisualEffect VFXEventAttribute]
+           [UnityEngine.Rendering.HighDefinition HDAdditionalLightData]
            [UnityEngine.UI Text]
            RectTransformUtility
            BaseAgent))

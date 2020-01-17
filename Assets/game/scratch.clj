@@ -1,14 +1,14 @@
 (ns game.scratch
-  (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam game.events)
+  (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam game.events game.text)
   (:import [UnityEngine Physics
             GameObject Input
             Vector2 Mathf Resources Transform
             PrimitiveType Collider Light Renderer
             Color Application Debug Time Canvas LightType
-            Quaternion Rigidbody Camera Shader]
-           [UnityEngine.Experimental.VFX VisualEffect VFXEventAttribute]
+            Quaternion Rigidbody Camera Shader TextAnchor]
+           [UnityEngine.VFX VisualEffect VFXEventAttribute]
            [UnityEngine.Rendering Volume]
-           [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
+           [UnityEngine.Rendering.HighDefinition HDAdditionalLightData]
            [UnityEngine.UI Text]
            RectTransformUtility
            BaseAgent
@@ -19,6 +19,7 @@
            CljQuarkEventListener))
 
 (use 'game.core :reload)
+(use 'game.text :reload)
 (use 'game.names :reload)
 (use 'game.personalities :reload)
 (use 'game.cam :reload)
@@ -28,6 +29,10 @@
 (do
   (init)
   (init-event-passer))
+
+(init)
+
+(do (deinit))
 
 (do 
   (rem-type :actor)
@@ -137,8 +142,15 @@
 (destroy! (object-named "Logger"))
 (destroy! (object-named "Passer"))
 
+; Text
 
 
+(create-score-text :left "11")
+(create-score-text :right "16")
+
+(update-score-text :right "14")
+
+(create-title-text "Of hope and despair lalala")
 
  
 @bfstate 
@@ -187,8 +199,6 @@
   (add-personality "Jack" "FindEachother/HelperRed"))
 
 (add-personality "Test" "DanceFloor/Mover")
-
-(add-personality "Wencke" "DanceFloor/Mover")
 
 (rem-type :actor)
 

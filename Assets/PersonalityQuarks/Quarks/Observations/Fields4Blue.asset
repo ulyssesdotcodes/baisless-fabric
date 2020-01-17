@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Fields4Blue
   m_EditorClassIdentifier: 
   ShowFields: 0
-  Tag: blueactorfind
+  FieldLogger: {fileID: 11400000, guid: dd2161ac65f00e043bf35f9494678466, type: 2}
+  Tag: blueactor
   NumFields: 4
   FieldName: com

@@ -13,15 +13,22 @@ MonoBehaviour:
   m_Name: HelperBrain2
   m_EditorClassIdentifier: 
   brainParameters:
-    vectorObservationSize: 17
-    numStackedVectorObservations: 12
-    vectorActionSize: 04000000
+    vectorObservationSize: 48
+    numStackedVectorObservations: 4
+    vectorActionSize: 0300000003000000030000000800000008000000080000000800000008000000080000000800000008000000
     cameraResolutions: []
     vectorActionDescriptions:
     - forward
-    - turn
-    - a
-    - b
-    vectorActionSpaceType: 1
-  model: {fileID: 5022602860645237092, guid: c6fda2cdeb793eb4c84d048563972a4d, type: 3}
+    - right
+    - rotate
+    - coma
+    - comb
+    - comb
+    - comb
+    - comb
+    - comb
+    - comb
+    - comb
+    vectorActionSpaceType: 0
+  model: {fileID: 5022602860645237092, guid: e778ce55f177385499ea0b00c43cdaec, type: 3}
   inferenceDevice: 0

@@ -545,7 +545,10 @@ MonoBehaviour:
   TargetSpawnNumberKeyVal: spawn_number
   TargetSpawnDistanceKeyVal: spawn_distance
   ActorSpawnNumberKeyVal: actor_spawn_number
-  Target: {fileID: 1751790651857562764, guid: 689b960ffa53bfc42bf1ee5ed227f12d, type: 3}
+  Targets:
+  - {fileID: 1751790651857562764, guid: a4b12a7378cd00049acef3f17ee8c26e, type: 3}
+  - {fileID: 1751790651857562764, guid: c0756a1d7e78bed4d890d4347a5436a3, type: 3}
+  - {fileID: 1751790651857562764, guid: 2c4d2a8cf2721c94b86ce3f37fb80a2a, type: 3}
   BlueActor: {fileID: 3854460671935394396, guid: ae61de6971458254ab4ff8623da1826d,
     type: 3}
   RedActor: {fileID: 2700724132352928126, guid: 4b085fe0a0150b54db33931488f7eba2,

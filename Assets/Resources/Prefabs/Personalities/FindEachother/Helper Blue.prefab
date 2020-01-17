@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 5685398738311501355}
   - component: {fileID: 5685398738311501348}
   - component: {fileID: 5685398738311501349}
-  - component: {fileID: 5685398738311501350}
   - component: {fileID: 5685398738311501359}
   - component: {fileID: 7199746220115693877}
+  - component: {fileID: 5134316777092210246}
+  - component: {fileID: -5366810589131443993}
   m_Layer: 0
   m_Name: Helper Blue
   m_TagString: blueactorfind
@@ -60,6 +61,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -125,10 +127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0eeec0971efaeb48a02d51ea2bf182f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 11400000, guid: df86387f4c52d80489adb9d14f3a18c6, type: 2}
   agentParameters:
-    agentCameras: []
-    agentRenderTextures: []
     maxStep: 0
     resetOnDone: 1
     onDemandDecision: 0
@@ -139,18 +138,6 @@ MonoBehaviour:
   ResetMessages:
   - "Looking for Blue (\uFF61\u2665\u203F\u2665\uFF61)"
   - "Finding my blue (\u3181\u03C9\u3181*)"
---- !u!114 &5685398738311501350
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5685398738311501351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb172294dbbcc408286b156a2c4b553c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5685398738311501359
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -177,3 +164,51 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Enable: 0
   offsetY: 1.5
+--- !u!114 &5134316777092210246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5685398738311501351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_BrainParameters:
+    vectorObservationSize: 6
+    numStackedVectorObservations: 3
+    vectorActionSize: 0300000003000000030000000400000004000000
+    vectorActionDescriptions: []
+    vectorActionSpaceType: 0
+  m_Model: {fileID: 5022602860645237092, guid: 59df54ed0993d6f43b6706a6c9a59088, type: 3}
+  m_InferenceDevice: 0
+  m_BehaviorType: 0
+  m_BehaviorName: FindEachother
+--- !u!114 &-5366810589131443993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5685398738311501351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb6b867a41448888c1cd4f99643ad71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sensorName: RedActor
+  detectableTags:
+  - redactor
+  - wall
+  raysPerDirection: 7
+  maxRayDegrees: 70
+  sphereCastRadius: 0.5
+  rayLength: 40
+  observationStacks: 3
+  rayHitColor: {r: 1, g: 0, b: 0, a: 1}
+  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
+  useWorldPositions: 1
+  startVerticalOffset: 0
+  endVerticalOffset: 0

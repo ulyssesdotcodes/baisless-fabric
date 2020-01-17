@@ -37,9 +37,6 @@ public class BaseAgent : Agent, IResettable {
         Quarks = QuarkGroup.Instantiate(Quarks);
         Quarks.Initialize(this);
 
-        Debug.Log(Quarks.name);
-        area.EventSystem.RaiseEvent(CreateEvent.Create(Quarks.name, gameObject));
-
         // TAG: MakeEvent area.Logger.Log(Logger.CreateMessage(LogMessageType.World, $"Initialized {Quarks.name} {gameObject.name}"), this); 
     }
 
@@ -47,7 +44,7 @@ public class BaseAgent : Agent, IResettable {
         AddVectorObs(Quarks.CollectObservations(this));
     }
 
-    public override void AgentAction(float[] vectorAction, string textAction) {
+    public override void AgentAction(float[] vectorAction) {
         Quarks.AgentAction(this, vectorAction);
     }
 
@@ -60,7 +57,6 @@ public class BaseAgent : Agent, IResettable {
     {
       RunResetMessage();
       //TAG: MakeEvent area.Logger.Log(System.String.Concat("Reset ", gameObject.transform.position.y));
-      area.EventSystem.RaiseEvent(ResetEvent.Create(gameObject));
       Quarks.Reset(this);
     }
 

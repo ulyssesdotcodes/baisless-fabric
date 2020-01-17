@@ -6,8 +6,8 @@
             PrimitiveType Collider Light Renderer
             Color Application Debug Time Canvas LightType
             Quaternion]
-           [UnityEngine.Experimental.VFX VisualEffect]
-           [UnityEngine.Experimental.Rendering.HDPipeline HDAdditionalLightData]
+           [UnityEngine.VFX VisualEffect]
+           [UnityEngine.Rendering.HighDefinition HDAdditionalLightData]
            [UnityEngine.UI Text]
            RectTransformUtility))
 
@@ -178,3 +178,4 @@
    (let [rstate (state obj k)
          rfn (rstate :fn)]
      (rfn obj col))))
+

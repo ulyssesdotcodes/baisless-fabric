@@ -19,4 +19,4 @@ MonoBehaviour:
   Reset: 0
   MultRewardByTagCount: 1
   AreaReset: 0
-  RewardKeyVal: 0
+  RewardKeyVal: target_reward

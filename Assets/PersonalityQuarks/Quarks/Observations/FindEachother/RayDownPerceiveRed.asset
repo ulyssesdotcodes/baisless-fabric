@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RayDownPerceiveRed
   m_EditorClassIdentifier: 
   DetectableObjects:
-  - redactorfind
+  - redactor
   - wall
   - ground
   rayAngles:
