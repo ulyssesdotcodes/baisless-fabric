@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: LeavePlayArea
   m_EditorClassIdentifier: 
   Amount: -1
+  AmountY: 0
   LimitX: 40
   LimitZ: 40
-  LimitY: 10
+  LimitY: 100
   PositionY: 0
   Reset: 1
   Done: 1
