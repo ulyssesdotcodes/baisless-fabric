@@ -8,7 +8,6 @@
     TransformEvent ResetEvent))
 
 (def eventlistener (cmpt (object-named "Area") CljQuarkEventListener))
-(def render-area (object-named "RenderedScene"))
 
 (defn init-event-passer []
   (let [obj (new GameObject "EventPasser")]
@@ -90,7 +89,6 @@
       }
     )
     (add-obj creator-name :creator obj)))
-
 
 ; (defn add-creator [source name obj-name]
 ;   (let [obj (new GameObject "Creator")]

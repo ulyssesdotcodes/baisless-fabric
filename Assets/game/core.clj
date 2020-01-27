@@ -17,13 +17,15 @@
 
 (def area (object-named "Area"))
 
+(def render-area (object-named "RenderedScene"))
+
 ; Text that follows an object
 
 (defn follow-update [roleobj k]
     (let [rolestate (state roleobj k)
           followobj (rolestate :obj)
           followobjpos (.. followobj transform position)
-          pos (v3 (.x followobjpos) (+ (.y followobjpos) 0.25) (.z followobjpos))
+          pos (v3 (.x followobjpos) (+ (.y followobjpos) 0.5) (.z followobjpos))
           screenPoint (.WorldToScreenPoint Camera/main pos)
           textcmpt (cmpt roleobj Text)
           canvasRect (cmpt (get-in @bfstate [:names :item]) UnityEngine.RectTransform)
@@ -76,11 +78,12 @@
      obj))
   ([n type obj show-name]
    (add-obj n type obj)
-   (set! (.name obj) n) 
-   (title-follow n obj))
+   (when show-name
+     (set! (.name obj) n) 
+     (title-follow n obj)))
   ([n type obj show-name pos] 
    (add-obj n type obj show-name ) 
-   (position! obj pos))
+   (local-position! obj pos))
   ([n type obj show-name pos rot] 
    (add-obj n type obj show-name pos) 
    (rotation! obj (Quaternion/Euler (.x rot) (.y rot) (.z rot)))))

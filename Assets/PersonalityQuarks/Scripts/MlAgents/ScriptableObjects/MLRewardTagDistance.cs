@@ -14,14 +14,36 @@ class MLRewardTagDistance : MLReward {
     GameObject TagBGameObject;
 
     public override void Initialize(BaseAgent agent) {
-        TagAGameObject = agent.gameObject.GetComponentInParent<Area>().FindGameObjectsWithTagInChildren(TagA)[0];
-        TagBGameObject = agent.gameObject.GetComponentInParent<Area>().FindGameObjectsWithTagInChildren(TagB)[0];
+      FindTags(agent);
     }
 
+    public void FindTags(BaseAgent agent) {
+      List<GameObject> TagAObjs = 
+        agent.gameObject.GetComponentInParent<PersonalityQuarksArea>().FindGameObjectsWithTagInChildren(TagA);
+      if(TagAGameObject == null && TagAObjs.Count > 0) {
+        TagAGameObject = TagAObjs[0];
+      }
+
+      List<GameObject> TagBObjs = 
+        agent.gameObject.GetComponentInParent<PersonalityQuarksArea>().FindGameObjectsWithTagInChildren(TagB);
+      if(TagAGameObject == null && TagBObjs.Count > 0) {
+        TagBGameObject = TagBObjs[0];
+      }
+    }
+      
+
     public override void AddReward(BaseAgent agent, float[] vectorActions) {
+      if(TagAGameObject == null || TagBGameObject == null) {
+        FindTags(agent);
+      } else {
         float sqrmag = (TagAGameObject.transform.position - TagBGameObject.transform.position).sqrMagnitude;
         float byMaxDist = sqrmag / (MaxDistance * MaxDistance);
         float scaledReward = Mathf.Max((1 - byMaxDist) * Reward, 0) / (float)agent.agentParameters.maxStep;
         agent.AddReward(scaledReward);
+
+        if(agent.area.EventSystem != null) {
+          agent.area.EventSystem.RaiseEvent(DistanceEvent.Create(agent.gameObject, sqrmag));
+        }
+      }
     }
 }

@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21c1cc7fdef083146b69663d0993f5d5, type: 3}
   m_Name: Consumables
   m_EditorClassIdentifier: 
-  SpawnDistanceKeyVal: spawn_distance
-  MultKeyVal: consumable_value
+  SpawnDistanceKeyVal: 32
+  MultKeyVal: 1
