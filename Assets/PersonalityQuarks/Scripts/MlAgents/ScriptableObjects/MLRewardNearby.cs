@@ -17,7 +17,7 @@ class MLRewardNearby : MLReward {
 
     public override void Initialize(BaseAgent agent) {
         myArea = agent.gameObject.GetComponentInParent<PersonalityQuarksArea>();
-        academy = FindObjectOfType<Academy>();
+        academy = Academy.Instance;
         ResetAreaAfter = AcademyParameters.FetchOrParse(academy, ResetAreaAfterKeyVal);
     }
 
@@ -39,7 +39,6 @@ class MLRewardNearby : MLReward {
                 agent.AddReward(Reward);
                 resetNextFrame = true;
               }
-
             } else {
               ResetTime = -1;
             }

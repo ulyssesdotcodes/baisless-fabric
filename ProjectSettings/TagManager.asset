@@ -36,6 +36,8 @@ TagManager:
   - pit
   - blueactorfind
   - redactorfind
+  - consumable
+  - movable
   layers:
   - Default
   - TransparentFX

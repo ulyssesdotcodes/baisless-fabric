@@ -11,7 +11,7 @@ class MLRewardConstant : MLReward {
     Academy academy;
 
     public override void Initialize(BaseAgent agent) {
-        academy = FindObjectOfType<Academy>();
+        academy = Academy.Instance;
         Amount = AcademyParameters.FetchOrParse(academy, AmountKeyVal);
     }
 

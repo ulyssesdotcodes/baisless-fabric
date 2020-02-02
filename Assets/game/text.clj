@@ -19,10 +19,14 @@
 
 (defn create-title-text [text]
   (let [obj (create-text :title text) 
-        txt (cmpt obj Text)]
-    (set! (.. obj transform localPosition) (v3 0 150 0))
+        txt (cmpt obj Text)
+        rect (.rectTransform txt)
+        ]
+    (set! (.. obj transform localPosition) (v3 0 -100 0))
     (set! (.. txt rectTransform sizeDelta) (v2 300 50))
-    (set! (.. txt alignment) (TextAnchor/MiddleCenter))
+    (set! (.. txt alignment) (TextAnchor/UpperCenter))
+    (set! (.. rect anchorMax) (v2 0.5 1))
+    (set! (.. rect anchorMin) (v2 0.5 1))
     ))
 
 (defn create-score-text [ty text]

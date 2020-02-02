@@ -43,7 +43,7 @@ public class BaseAgent : Agent {
     }
 
     public override void AgentAction(float[] vectorAction) {
-        Quarks.AgentAction(this, vectorAction);
+      Quarks.AgentAction(this, vectorAction);
     }
 
     public override void AgentReset() {

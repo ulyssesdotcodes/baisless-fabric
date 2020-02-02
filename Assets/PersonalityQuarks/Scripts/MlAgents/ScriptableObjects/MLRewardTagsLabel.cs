@@ -15,7 +15,7 @@ class MLRewardTagsLabel : MLReward {
     public bool AreaReset;
     public string RewardKeyVal = "0";
 
-    PersonalityQuarksAcademy academy;
+    Academy academy;
     private float Reward = 0;
 
     PersonalityQuarksArea myArea;
@@ -23,7 +23,7 @@ class MLRewardTagsLabel : MLReward {
 
 
     public override void Initialize(BaseAgent agent) {
-        academy = FindObjectOfType<PersonalityQuarksAcademy>();
+        academy = Academy.Instance;
         Reward = AcademyParameters.FetchOrParse(academy, RewardKeyVal);
 
         myArea = agent.gameObject.GetComponentInParent<PersonalityQuarksArea>();

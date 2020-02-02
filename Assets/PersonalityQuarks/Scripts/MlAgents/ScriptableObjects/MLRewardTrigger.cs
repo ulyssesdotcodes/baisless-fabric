@@ -49,7 +49,7 @@ class MLRewardTrigger : MLReward {
 
         agent.ColliderTags.Add(Tag);
 
-        academy = FindObjectOfType<Academy>();
+        academy = Academy.Instance;
 
         Reward = AcademyParameters.FetchOrParse(academy, RewardKeyVal);
         ContinuousReward = AcademyParameters.FetchOrParse(academy, ContinuousRewardKeyVal);

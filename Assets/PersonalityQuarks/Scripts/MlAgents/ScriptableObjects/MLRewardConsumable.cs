@@ -10,7 +10,7 @@ class MLRewardConsumable : MLReward {
     Academy academy;
 
     public override void Initialize(BaseAgent agent) {
-        academy = FindObjectOfType<Academy>();
+        academy = Academy.Instance;
         Mult = AcademyParameters.FetchOrParse(academy, MultKeyVal);
         SpawnDistance = AcademyParameters.FetchOrParse(academy, SpawnDistanceKeyVal);
     }

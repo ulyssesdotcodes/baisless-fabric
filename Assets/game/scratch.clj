@@ -1,5 +1,5 @@
 (ns game.scratch
-  (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam game.events game.text)
+  (use arcadia.core arcadia.linear hard.core game.core game.names game.personalities game.cam game.events game.text game.props)
   (:import [UnityEngine Physics
             GameObject Input
             Vector2 Mathf Resources Transform
@@ -16,7 +16,8 @@
            QuarkEvents
            QuarkEventType
            TransformEvent ResetEvent
-           CljQuarkEventListener))
+           CljQuarkEventListener
+           PersonalityQuarksArea))
 
 (use 'game.core :reload)
 (use 'game.text :reload)
@@ -24,6 +25,7 @@
 (use 'game.personalities :reload)
 (use 'game.cam :reload)
 (use 'game.events :reload)
+(use 'game.props :reload)
 
 (do
   (init)
@@ -32,61 +34,194 @@
 (init)
 
 (do (deinit))
-
   (rem-type :puppet)
+
+; Inits
+
+(do 
+  (init)
+  (init-event-passer)
+
+  (create-score-text :left "0")
+  (create-score-text :right "0")
+
+  (def tele-id -1)
+  (def luar-id -1)
+
+  (def tele-score (atom 0))
+  (def luar-score (atom 0))
+
+  (def luar (object-named "Blue"))
+  (def tele (object-named "Red"))
+
+  (defn position-event [obj e]
+    (when (= (.Type e) (enum-val QuarkEventType "Transform"))
+      (let [pos (.Position e)]
+        (set! (-> obj .transform .localPosition) pos)
+        (set! (-> obj .transform .rotation) (.Rotation e))
+        )))
+
+  (defn distance-event [obj e]
+    (when (= (.Type e) (enum-val QuarkEventType "Distance"))
+      (let [distance (.Distance e)
+            id (.Id e)
+            score-tag (if (= id tele-id) :left :right)
+            score (if (= id tele-id) tele-score luar-score)
+            ]
+        (swap! score (fn [s] (+ s (max 0 (- 1 (Mathf/Floor distance))))))
+        (update-score-text score-tag (str @score)))))
+
+  (defn live [obj e]
+    (position-event obj e)
+    (distance-event obj e))
+
+
+  (defn agent-listener [obj fabname fab]
+    (if (= fabname "Tele") 
+      (def tele-id (.GetInstanceID obj)) 
+      (def luar-id (.GetInstanceID obj)))
+    (create-event-listener 
+       (str "Prefabs/FindEachother/" fab) 
+       (.GetInstanceID obj)
+       (fn [created]
+         (add-obj fabname :puppet created true))
+       [#'live]
+       ))
+
+  (defn reset-agents []
+    (let [pos (v3 (?f -32 32) 0.5 (?f -32 32))]
+    (position! luar pos)
+    (position! tele (v3 (* -1 (.x pos) 0.5 (.z pos))))
+  )
+
+
+
+; Act I
+
+(create-title-text "Act I: Kisses")
+
+(agent-listener tele "Tele" "Tele")
+(agent-listener luar "Luar" "Luar")
+
+(def tele-particles (object-named "Tele"))
+(def luar-particles (object-named "Luar"))
+
+(do
+  (defn cam-far []
+    (focus-cam [tele-particles luar-particles] (v3 0 20 -4) false))
+
+  (defn cam-near []
+    (focus-cam [tele-particles luar-particles] (v3 0 2 0) true))
+
+  (defn cam-far-zoom []
+    (focus-cam [tele-particles luar-particles] (v3 0 40 -4) true))
+
+  (defn luar-cam-far []
+    (focus-cam [luar-particles] (v3+ (.. luar transform localPosition) (v3 0 20 -4)) false))
+
+  (defn luar-cam-near []
+    (focus-cam [luar-particles] (v3+ (.. luar transform localPosition) (v3 0 2 0)) false))
+
+  (defn tele-cam-far []
+    (focus-cam [tele-particles] (v3+ (.. tele transform localPosition) (v3 0 20 -4)) false))
+
+  (defn tele-cam-near []
+    (focus-cam [tele-particles] (v3+ (.. tele transform localPosition) (v3 0 2 0)) true)))
+
+(cam-far)
+
+(defn from-the-top []
+  (reset-agents)
+  (reset! tele-score 0)
+  (reset! luar-score 0))
+
+(from-the-top)
+
+(cam-far-zoom)
+
+; Act II
+
+(create-title-text "Act II: Obstacles")
+
+(dotimes [n 4] (add-cubewall))
+(dotimes [n 4] (add-column))
+(dotimes [n 4] (add-rectwall))
+
+(cam-far)
+
+(tele-cam-near)
+
+(from-the-top)
+
+(rem-type :wall)
+
+; Act III
+
+(create-title-text "Act III: Challenges")
+
+(dotimes [n 8] (add-moveable-box))
+(dotimes [n 8] (add-movable-wedge))
+
+(from-the-top)
+
+(rem-type :movable)
+
+; Act IV
+
+(create-title-text "Act IV: Distractions")
+
+(dotimes [n 32] (add-big-consumable))
+(dotimes [n 32] (add-small-consumable))
+
+(from-the-top)
+
+(cam-far-zoom)
+
+(rem-type :consumable)
+
+; Act V
+
+(create-title-text "Act V: A Kiss")
+
+(dotimes [n 128] (add-random-prop))
+
+(focus-cam [luar-particles tele-particles] (v3 0 40 -4) true)
+(cam-far-zoom)
+
+(from-the-top)
+
+(do
+  (rem-type :wall)
+  (rem-type :movable)
+  (rem-type :consumable))
+
+(create-title-text "Fin")
+
+
+
+
+; resets
 
 (do 
   (rem-type :actor)
   (rem-type :puppet)
   (rem-type :creator)
   (rem-type :title)
-  (clear-event-listeners)
-  )
+  (rem-type :text)
+  (rem-type :wall)
+  (rem-type :movable)
+  (rem-type :consumable)
+  (clear-event-listeners))
 
-(def luar (object-named "Blue"))
-(def tele (object-named "Red"))
-
-(defn live [obj e]
-  (Debug/Log (.Id e))
-  (when (and (= (.Type e) (enum-val QuarkEventType "Transform"))
-          (== (.Id e) (.GetInstanceID tele)))
-    (sets! (.transform (main-cam))
-           localPosition (v3+ (.Position e) (v3 0 20 -6))))
-  )
-
-(defn position-event [obj e]
-  (when (= (.Type e) (enum-val QuarkEventType "Transform"))
-    (let [pos (.Position e)]
-      (set! (-> obj .transform .localPosition) pos)
-      (set! (-> obj .transform .rotation) (.Rotation e)))))
+(do
+  (reset-agents)
+  (focus-cam [tele-particles luar-particles] (v3 0 10 0) true)
+  (reset! tele-score 0)
+  (reset! luar-score 0)))
 
 
-(defn agent-listener [n fab]
-  (let [obj (object-named n)]
-    (create-event-listener 
-       (str "Prefabs/FindEachother/" fab) 
-       (.GetInstanceID obj)
-       (fn [created]
-         (add-obj fab :puppet created true))
-       [#'position-event
-        #'live]
-       )))
-
-(clear-event-listeners)
-
-(agent-listener "Red" "Tele")
-
-(agent-listener "Blue" "Luar")
 
 ; Text
-
-(create-score-text :left "11")
-(create-score-text :right "16")
-
-(update-score-text :right "14")
-
-(create-title-text "Of hope and despair lalala")
-
 
 (add-obj
  "Spot"
@@ -140,34 +275,6 @@
 
 (dotimes [n 16] (add-cubewall))
 
-(defn add-cubewall []
-  (let [p (v3 (?f -32 32) 1 (?f -32 32))]
-  (add-obj
-    :uniq
-    :wall
-    (instantiate-in-area (Resources/Load "Prefabs/FindEachother/Objects/CubeWall"))
-    false
-    p)
-  (add-obj
-    :uniq
-    :wall
-    (UnityEngine.Object/Instantiate (Resources/Load "Prefabs/FindEachother/Objects/CubeWall") (.transform render-area))
-    false
-    p)))
-
-(defn add-column []
-  (add-obj
-    :uniq
-    :wall
-    (instantiate-in-area (Resources/Load "Prefabs/Column"))
-    (v3 (?f -32 32) 1 (?f -32 32))))
-
-(defn add-rectwall []
-  (add-obj
-    :uniq
-    :wall
-    (instantiate-in-area (Resources/Load "Prefabs/RectWall"))
-    (v3 (?f -32 32) 1 (?f -32 32))))
 
 
 (rem-type :target)

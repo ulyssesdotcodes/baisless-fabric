@@ -35,7 +35,6 @@
     (fn [passer]
       (update passer :listeners 
         (fn [listeners]
-          (Debug/Log id)
           (update listeners id #(if (empty? %) (set [efn]) (conj % efn)))))))
   efn)
 

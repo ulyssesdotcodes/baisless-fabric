@@ -15,4 +15,4 @@ MonoBehaviour:
   Tag: redactor
   Reward: 2
   Distance: 4
-  ResetAreaAfterKeyVal: together_time
+  ResetAreaAfterKeyVal: 100000

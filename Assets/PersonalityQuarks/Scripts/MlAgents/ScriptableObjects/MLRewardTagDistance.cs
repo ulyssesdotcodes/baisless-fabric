@@ -26,7 +26,7 @@ class MLRewardTagDistance : MLReward {
 
       List<GameObject> TagBObjs = 
         agent.gameObject.GetComponentInParent<PersonalityQuarksArea>().FindGameObjectsWithTagInChildren(TagB);
-      if(TagAGameObject == null && TagBObjs.Count > 0) {
+      if(TagBGameObject == null && TagBObjs.Count > 0) {
         TagBGameObject = TagBObjs[0];
       }
     }
@@ -38,7 +38,7 @@ class MLRewardTagDistance : MLReward {
       } else {
         float sqrmag = (TagAGameObject.transform.position - TagBGameObject.transform.position).sqrMagnitude;
         float byMaxDist = sqrmag / (MaxDistance * MaxDistance);
-        float scaledReward = Mathf.Max((1 - byMaxDist) * Reward, 0) / (float)agent.agentParameters.maxStep;
+        float scaledReward = Mathf.Max((1 - byMaxDist) * Reward, 0) / Mathf.Max((float)agent.agentParameters.maxStep, 1);
         agent.AddReward(scaledReward);
 
         if(agent.area.EventSystem != null) {
