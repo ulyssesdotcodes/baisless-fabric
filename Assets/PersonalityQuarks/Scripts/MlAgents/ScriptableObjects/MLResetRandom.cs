@@ -13,8 +13,9 @@ class MLResetRandom : MLReset {
     private Academy academy;
 
     public override void Initialize(BaseAgent agent) {
+      base.Initialize(agent);
         PositionY = agent.gameObject.transform.position.y;
-        academy = Academy.Instance;
+        academy = agent.area.academy;
         PlayAreaDistance = AcademyParameters.FetchOrParse(academy, PlayAreaDistanceKeyVal);
     }
 

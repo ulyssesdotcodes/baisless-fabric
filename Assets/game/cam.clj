@@ -26,22 +26,31 @@
         forward (.normalized (v3- opos center))
         dist (reduce (fn [dist target] (Mathf/Min (Vector3/Distance (.. target transform position) opos) dist)) 1000000 objs)
         mult (* (Mathf/Cos (/ (* Mathf/PI 40) 180)) dist)
-        angle (reduce (fn [dist target] (Mathf/Max (Vector3/Angle forward (v3- (.. target transform position) opos)) dist)) 0 objs)
+        camcmpt (cmpt obj Camera)
+        fov (.fieldOfView camcmpt)
+        angle (reduce 
+                (fn [dist target] 
+                  (Mathf/Max 
+                    (* 2 (+ 5 (Vector3/Angle 
+                      forward 
+                      (v3- opos (.. target transform position)))))
+                    dist)) 
+                (* 0.95 fov) 
+                objs
+                )
         ]
     (.. obj transform (LookAt center))
     ; (Debug/Log angle)
     ; (Debug/Log center)
     ; (Debug/Log mult)
     (when zoom
-    ;   (set! 
-    ;     (.fieldOfView (cmpt obj Camera))
-    ;     (+ (float angle) 10)))
       (set! 
-        (.. obj transform position)
-        (v3+ center (v3* forward mult))))
+        (.fieldOfView camcmpt)
+        angle))
+      ; (set! 
+      ;   (.. obj transform position)
+      ;   (v3+ center (v3* forward mult))))
   ))
-
-(set! (.. main-cam transform localPosition) (v3 0 10 0))
 
 
 (defrole focus-objs
@@ -54,8 +63,9 @@
     (role+ main-cam :focus focus-objs)
     (state+ main-cam :focus { :objs objs :pos (.TransformPoint (.transform (parent main-cam)) pos) :zoom false }))
   ([objs pos zoom]
-   (focus-cam objs pos)
-   (update-state main-cam :focus (fn [n] (assoc n :zoom zoom))))
+    (focus-cam objs pos)
+    (update-state main-cam :focus (fn [n] (assoc n :zoom zoom)))
+    (when (not zoom) (set! (.fieldOfView (cmpt main-cam Camera)) 60)))
   )
 
 (defrole face-parent-velocity

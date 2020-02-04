@@ -4,43 +4,39 @@
            ))
 
 
-(defn add-render [tag fab]
-  (let [p (v3 (?f -32 32) 1 (?f -32 32))]
-  (add-obj
-    :uniq
-    tag
-    (instantiate-in-area (Resources/Load (str "Prefabs/FindEachother/Objects/" fab)))
-    false
-    p)
-  (add-obj
-    :uniq
-    tag
-    (UnityEngine.Object/Instantiate (Resources/Load (str "Prefabs/FindEachother/Objects/" fab)) (.transform render-area))
-    false
-    p)))
+(defn add-render 
+  ([tag fab y] (add-render tag fab y 32))
+  ([tag fab y dist]
+    (let [p (v3 (?f (* -1 dist) dist) y (?f (* -1 dist) dist))]
+    (add-obj
+      :uniq
+      tag
+      (instantiate-in-area (Resources/Load (str "Prefabs/FindEachother/Objects/" fab)))
+      false
+      p))))
 
 
 
 (defn add-cubewall []
-  (add-render :wall "CubeWall"))
+  (add-render :wall "CubeWall" 1))
 
 (defn add-column []
-  (add-render :wall "Column"))
+  (add-render :wall "Column" 1))
 
 (defn add-rectwall []
-  (add-render :wall "RectWall"))
+  (add-render :wall "RectWall" 1))
 
 (defn add-moveable-box []
-  (add-render :movable "Movable Box"))
+  (add-render :movable "Movable Box" 0.5))
 
 (defn add-movable-wedge []
-  (add-render :movable "Movable Wedge"))
+  (add-render :movable "Movable Wedge" 0.5))
 
 (defn add-big-consumable []
-  (add-render :consumable "Big consumable"))
+  (add-render :consumable "Big consumable" 0.5 24))
 
 (defn add-small-consumable []
-  (add-render :consumable "Small consumable"))
+  (add-render :consumable "Small consumable" 0.5 24))
 
 (defn add-random-prop []
   (let [n (rand-int 7)]

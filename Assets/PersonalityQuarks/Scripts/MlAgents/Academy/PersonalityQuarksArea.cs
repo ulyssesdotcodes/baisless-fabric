@@ -26,7 +26,7 @@ public class PersonalityQuarksArea : MonoBehaviour
     EventSystem = GetComponent<QuarkEvents>();
 
     StartY = gameObject.transform.position.y;
-    academy = Academy.Instance;
+    academy = Object.FindObjectOfType<Academy>();
 
     AreaResetClones = new List<AreaReset>();
     foreach(AreaReset areaReset in AreaResets) {

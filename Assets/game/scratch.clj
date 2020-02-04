@@ -10,6 +10,7 @@
            [UnityEngine.Rendering Volume]
            [UnityEngine.Rendering.HighDefinition HDAdditionalLightData]
            [UnityEngine.UI Text]
+           [Lasp MasterInput FilterType]
            RectTransformUtility
            BaseAgent
            QuarkEvent
@@ -29,30 +30,26 @@
 
 (do
   (init)
-  (init-event-passer))
-
-(init)
-
-(do (deinit))
-  (rem-type :puppet)
-
-; Inits
-
-(do 
-  (init)
   (init-event-passer)
-
-  (create-score-text :left "0")
-  (create-score-text :right "0")
-
   (def tele-id -1)
   (def luar-id -1)
 
-  (def tele-score (atom 0))
-  (def luar-score (atom 0))
+  (def tele-score (atom 1))
+  (def luar-score (atom 1))
 
   (def luar (object-named "Blue"))
+  (def luar-vfx (object-named "Luar - VFX"))
   (def tele (object-named "Red"))
+  (def tele-vfx (object-named "Tele - VFX"))
+  )
+
+
+; ; Inits
+
+(do 
+  ; (create-score-text :left "0")
+  ; (create-score-text :right "0")
+
 
   (defn position-event [obj e]
     (when (= (.Type e) (enum-val QuarkEventType "Transform"))
@@ -68,13 +65,22 @@
             score-tag (if (= id tele-id) :left :right)
             score (if (= id tele-id) tele-score luar-score)
             ]
-        (swap! score (fn [s] (+ s (max 0 (- 1 (Mathf/Floor distance))))))
-        (update-score-text score-tag (str @score)))))
+        (swap! score (fn [s] (+ s (* 0.125 (max 0 (- 2 (Mathf/Floor distance)))))))
+        )))
+
+  (defn consumable-event [obj e]
+    (when (= (.Type e) (enum-val QuarkEventType "Consumable"))
+      (let [reward (* 0.015625 (.Reward e))
+            id (.Id e)
+            score-tag (if (= id tele-id) :left :right)
+            score (if (= id tele-id) tele-score luar-score)
+            ]
+        (swap! score (fn [s] (+ s reward))))))
 
   (defn live [obj e]
     (position-event obj e)
-    (distance-event obj e))
-
+    (distance-event obj e)
+    (consumable-event obj e))
 
   (defn agent-listener [obj fabname fab]
     (if (= fabname "Tele") 
@@ -88,30 +94,84 @@
        [#'live]
        ))
 
-  (defn reset-agents []
-    (let [pos (v3 (?f -32 32) 0.5 (?f -32 32))]
+  (defn from-the-top []
+    (let [xrand (?f -15 15)
+          xpos (+ xrand (* (Mathf/Sign xrand) 15))
+          zrand (?f -15 15)
+          zpos (+ zrand (* (Mathf/Sign zrand) 15))
+          pos (v3 xpos 0.5 zpos)]
     (position! luar pos)
-    (position! tele (v3 (* -1 (.x pos) 0.5 (.z pos))))
+    (position! tele (v3 (* -1 xpos) 0.5 (* -1 zpos)))
+    (reset! tele-score 1)
+    (reset! luar-score 1)))
+
+  (defn update-score-alpha [obj k]
+    (let [score-atom ((state obj k) :score-atom)
+          score @score-atom
+          light ((state obj k) :score-light)
+          vfx ((state obj k) :score-vfx)
+          lightlevel (* score 1000.0)
+          ]
+      (.SetFloat vfx "Alpha" score)
+      (.SetFloat 
+        vfx 
+        "Intensity" 
+        (MasterInput/CalculateRMS (enum-val FilterType "LowPass")))
+      (.SetFloat 
+        vfx 
+        "Roughness" 
+        (MasterInput/CalculateRMS (enum-val FilterType "Bypass")))
+      (set! (.intensity light) (float lightlevel))
+      (swap! score-atom (fn [s] (- s 0.0008)))))
+
+  (defrole score-alpha 
+    :state { :score-atom tele-score
+             :score-light nil
+             :score-vfx nil
+           }
+    :update #'update-score-alpha)
   )
 
+(from-the-top)
 
+; ; Act I
 
-; Act I
+(create-title-text "Act I: Connection")
 
-(create-title-text "Act I: Kisses")
+(do 
+  (agent-listener tele "Tele" "Tele")
+  (agent-listener luar "Luar" "Luar")
 
-(agent-listener tele "Tele" "Tele")
-(agent-listener luar "Luar" "Luar")
+  (def tele-particles (object-named "Tele"))
+  (def luar-particles (object-named "Luar"))
+  
+  (def tele-light (object-named "Tele-Light"))
+  (def luar-light (object-named "Luar-Light")))
 
-(def tele-particles (object-named "Tele"))
-(def luar-particles (object-named "Luar"))
+(do
+  (role+ tele-particles :alpha-score score-alpha)
+  (state+ tele-particles :alpha-score { 
+                                 :score-atom tele-score 
+                                 :score-light (cmpt tele-light HDAdditionalLightData)
+                                 :score-vfx (cmpt tele-vfx VisualEffect)
+                                 })
+  (Debug/Log @tele-score))
+
+(do
+  (role+ luar-particles :alpha-score score-alpha)
+  (state+ luar-particles :alpha-score { 
+                                 :score-atom luar-score 
+                                 :score-light (cmpt luar-light HDAdditionalLightData)
+                                 :score-vfx (cmpt luar-vfx VisualEffect)
+                                 })
+  (Debug/Log @luar-score))
 
 (do
   (defn cam-far []
     (focus-cam [tele-particles luar-particles] (v3 0 20 -4) false))
 
   (defn cam-near []
-    (focus-cam [tele-particles luar-particles] (v3 0 2 0) true))
+    (focus-cam [tele-particles luar-particles] (v3 0 4 0) false))
 
   (defn cam-far-zoom []
     (focus-cam [tele-particles luar-particles] (v3 0 40 -4) true))
@@ -126,32 +186,32 @@
     (focus-cam [tele-particles] (v3+ (.. tele transform localPosition) (v3 0 20 -4)) false))
 
   (defn tele-cam-near []
-    (focus-cam [tele-particles] (v3+ (.. tele transform localPosition) (v3 0 2 0)) true)))
+    (focus-cam [tele-particles] (v3+ (.. tele transform localPosition) (v3 0 4 -4)) true)))
 
-(cam-far)
+(focus-cam [tele-particles luar-particles] (v3 0 4 60) true)
 
-(defn from-the-top []
-  (reset-agents)
-  (reset! tele-score 0)
-  (reset! luar-score 0))
+(focus-cam [tele-particles] (v3 0 20 -3) false)
 
 (from-the-top)
 
-(cam-far-zoom)
+(tele-cam-far)
 
 ; Act II
 
 (create-title-text "Act II: Obstacles")
 
-(dotimes [n 4] (add-cubewall))
-(dotimes [n 4] (add-column))
-(dotimes [n 4] (add-rectwall))
+(do 
+  (dotimes [n 16] (add-cubewall))
+  (dotimes [n 16] (add-column))
+  (dotimes [n 16] (add-rectwall)))
 
-(cam-far)
+(cam-far-zoom)
 
-(tele-cam-near)
+(tele-cam-far)
 
 (from-the-top)
+
+(focus-cam [tele-particles] (v3 0 10 -6) false)
 
 (rem-type :wall)
 
@@ -159,8 +219,8 @@
 
 (create-title-text "Act III: Challenges")
 
-(dotimes [n 8] (add-moveable-box))
-(dotimes [n 8] (add-movable-wedge))
+(dotimes [n 32] (add-moveable-box))
+(dotimes [n 32] (add-movable-wedge))
 
 (from-the-top)
 
@@ -170,12 +230,16 @@
 
 (create-title-text "Act IV: Distractions")
 
-(dotimes [n 32] (add-big-consumable))
-(dotimes [n 32] (add-small-consumable))
+(dotimes [n 64] (add-big-consumable))
+(dotimes [n 64] (add-small-consumable))
 
 (from-the-top)
 
-(cam-far-zoom)
+(tele-cam-near)
+
+(focus-cam 
+  [tele-particles ] 
+  (v3+ (.. tele transform localPosition) (v3 0 4 -4)) true)
 
 (rem-type :consumable)
 
@@ -184,9 +248,17 @@
 (create-title-text "Act V: A Kiss")
 
 (dotimes [n 128] (add-random-prop))
+(dotimes [n 16] (add-big-consumable))
+(dotimes [n 16] (add-small-consumable))
+(dotimes [n 32] (add-moveable-box))
+(dotimes [n 32] (add-movable-wedge))
+(dotimes [n 16] (add-cubewall))
+(dotimes [n 16] (add-column))
+(dotimes [n 16] (add-rectwall))
 
-(focus-cam [luar-particles tele-particles] (v3 0 40 -4) true)
 (cam-far-zoom)
+
+(tele-cam-near)
 
 (from-the-top)
 
@@ -211,130 +283,131 @@
   (rem-type :wall)
   (rem-type :movable)
   (rem-type :consumable)
-  (clear-event-listeners))
+  (clear-event-listeners)
+  (focus-cam [] (v3 0 40 0) false))
 
-(do
-  (reset-agents)
-  (focus-cam [tele-particles luar-particles] (v3 0 10 0) true)
-  (reset! tele-score 0)
-  (reset! luar-score 0)))
-
-
-
-; Text
-
-(add-obj
- "Spot"
- :light
- (blink-light LightType/Spot 800 (Color/red) 4)
- (v3 0 8 0)
- (v3 90 0 0))
-
-(add-obj
- "Spotblue"
- :light
- (blink-light LightType/Spot 800 (Color/blue) 4)
- (v3 0 8 0)
- (v3 90 0 0))
-
-(add-obj
- "Point0"
- :light
- (blink-light LightType/Spot 3200 (Color/red) 0.5)
- (v3 10 1 10))
-
-(add-obj
- "Point1"
- :light
- (blink-light LightType/Spot 3200 (Color/blue) 0.33)
- (v3 -10 1 10))
-
-(add-obj
- "Point2"
- :light
- (blink-light LightType/Point 3200 (Color/green) 2)
- (v3 -10 1 -10))
-
-(add-obj
- "Point3"
- :light
- (blink-light LightType/Spot 3200 (Color/yellow) 2)
- (v3 10 1 -10))
-
-(rem-obj "Spot")
-
-; walls
-
-
-(rem-type :wall)
-
-(do
-  (dotimes [n 16] (add-cubewall))
-  (dotimes [n 7] (add-rectwall))
-  (dotimes [n 16] (add-column)))
-
-(dotimes [n 16] (add-cubewall))
+; (do
+;   (reset-agents)
+;   (focus-cam [tele-particles luar-particles] (v3 0 10 0) true)
+;   (reset! tele-score 0)
+;   (reset! luar-score 0)))
 
 
 
-(rem-type :target)
-(rem-type :wall)
-(rem-type :actor)
+; ; Text
 
-; vfx
+; (add-obj
+;  "Spot"
+;  :light
+;  (blink-light LightType/Spot 800 (Color/red) 4)
+;  (v3 0 8 0)
+;  (v3 90 0 0))
+
+; (add-obj
+;  "Spotblue"
+;  :light
+;  (blink-light LightType/Spot 800 (Color/blue) 4)
+;  (v3 0 8 0)
+;  (v3 90 0 0))
+
+; (add-obj
+;  "Point0"
+;  :light
+;  (blink-light LightType/Spot 3200 (Color/red) 0.5)
+;  (v3 10 1 10))
+
+; (add-obj
+;  "Point1"
+;  :light
+;  (blink-light LightType/Spot 3200 (Color/blue) 0.33)
+;  (v3 -10 1 10))
+
+; (add-obj
+;  "Point2"
+;  :light
+;  (blink-light LightType/Point 3200 (Color/green) 2)
+;  (v3 -10 1 -10))
+
+; (add-obj
+;  "Point3"
+;  :light
+;  (blink-light LightType/Spot 3200 (Color/yellow) 2)
+;  (v3 10 1 -10))
+
+; (rem-obj "Spot")
+
+; ; walls
 
 
-; Lights
+; (rem-type :wall)
 
-(defn blink-light [type lumens color speed]
-  (let [light (create-light type lumens color)]
-    (role+ light :blink repeattrigger)
-    (update-state light :blink #(assoc % :time speed))
-    (update-state light :blink #(assoc % :fn (fn [obj] (set! (.enabled (cmpt obj Light)) (not (.enabled (cmpt obj Light)))))))
-    light))
+; (do
+;   (dotimes [n 16] (add-cubewall))
+;   (dotimes [n 7] (add-rectwall))
+;   (dotimes [n 16] (add-column)))
+
+; (dotimes [n 16] (add-cubewall))
 
 
-(defn create-light 
-    ([^LightType type lumens ^Color color] 
-        (let [gobj (new GameObject)
-              light (cmpt+ gobj Light)
-              hdlight (cmpt+ gobj HDAdditionalLightData)]
-          (set! (.type light) type)
-          (set! (.color light) color)
-          (set! (.intensity hdlight) lumens)
-          gobj)))
 
-; VFX
+; (rem-type :target)
+; (rem-type :wall)
+; (rem-type :actor)
 
-(defn set-bloom [intensity]
-  (let [volumeobj (GameObject/Find "Volume")
-        volume (cmpt volumeobj Volume)
-        profile (.profile volume)
-        components (.components profile)
-        bloom (nth components 4)]
-    (set! (-> bloom .intensity .value) (float intensity))))
+; ; vfx
 
-(defn set-motionblur [intensity]
-  (let [volumeobj (GameObject/Find "Volume")
-        volume (cmpt volumeobj Volume)
-        profile (.profile volume)
-        components (.components profile)
-        bloom (nth components 5)]
-    (set! (-> bloom .intensity .value) (float intensity))))
 
-(defn set-dof [intensity]
-  (let [volumeobj (GameObject/Find "Volume")
-        volume (cmpt volumeobj Volume)
-        profile (.profile volume)
-        components (.components profile)
-        dof (nth components 6)]
-    (set! (-> dof .active) (if (> intensity 0) true false))
-    (set! (-> dof .focusDistance .value) (float intensity))))
+; ; Lights
 
-(set-bloom 
-  0.3)
-(set-bloom 0.2)
-(set-motionblu0.4)
-(set-motionblur 1.6)
-(set-dof 0)
+; (defn blink-light [type lumens color speed]
+;   (let [light (create-light type lumens color)]
+;     (role+ light :blink repeattrigger)
+;     (update-state light :blink #(assoc % :time speed))
+;     (update-state light :blink #(assoc % :fn (fn [obj] (set! (.enabled (cmpt obj Light)) (not (.enabled (cmpt obj Light)))))))
+;     light))
+
+
+; (defn create-light 
+;     ([^LightType type lumens ^Color color] 
+;         (let [gobj (new GameObject)
+;               light (cmpt+ gobj Light)
+;               hdlight (cmpt+ gobj HDAdditionalLightData)]
+;           (set! (.type light) type)
+;           (set! (.color light) color)
+;           (set! (.intensity hdlight) lumens)
+;           gobj)))
+
+; ; VFX
+
+; (defn set-bloom [intensity]
+;   (let [volumeobj (GameObject/Find "Volume")
+;         volume (cmpt volumeobj Volume)
+;         profile (.profile volume)
+;         components (.components profile)
+;         bloom (nth components 4)]
+;     (set! (-> bloom .intensity .value) (float intensity))))
+
+; (defn set-motionblur [intensity]
+;   (let [volumeobj (GameObject/Find "Volume")
+;         volume (cmpt volumeobj Volume)
+;         profile (.profile volume)
+;         components (.components profile)
+;         bloom (nth components 5)]
+;     (set! (-> bloom .intensity .value) (float intensity))))
+
+; (defn set-dof [intensity]
+;   (let [volumeobj (GameObject/Find "Volume")
+;         volume (cmpt volumeobj Volume)
+;         profile (.profile volume)
+;         components (.components profile)
+;         dof (nth components 6)]
+;     (set! (-> dof .active) (if (> intensity 0) true false))
+;     (set! (-> dof .focusDistance .value) (float intensity))))
+
+; (set-bloom 
+;   0.3)
+; (set-bloom 0.2)
+; (set-motionblu0.4)
+; (set-motionblur 1.6)
+; (set-dof 0)
 

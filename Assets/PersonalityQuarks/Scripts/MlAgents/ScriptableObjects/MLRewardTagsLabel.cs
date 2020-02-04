@@ -23,7 +23,7 @@ class MLRewardTagsLabel : MLReward {
 
 
     public override void Initialize(BaseAgent agent) {
-        academy = Academy.Instance;
+        academy = agent.area.academy;
         Reward = AcademyParameters.FetchOrParse(academy, RewardKeyVal);
 
         myArea = agent.gameObject.GetComponentInParent<PersonalityQuarksArea>();

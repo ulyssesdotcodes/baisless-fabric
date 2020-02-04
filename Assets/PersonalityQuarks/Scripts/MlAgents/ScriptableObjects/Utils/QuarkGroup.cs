@@ -60,6 +60,7 @@ public class QuarkGroup : ScriptableObject {
             obses.AddRange(group.CollectObservations(agent));
         }
 
+
         return obses;
     }
     

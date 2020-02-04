@@ -38,6 +38,7 @@ TagManager:
   - redactorfind
   - consumable
   - movable
+  - code-text
   layers:
   - Default
   - TransparentFX
