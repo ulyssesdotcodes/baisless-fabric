@@ -8,9 +8,7 @@
             Quaternion Rigidbody Camera Shader TextAnchor]
            [UnityEngine.VFX VisualEffect VFXEventAttribute]
            [UnityEngine.Rendering Volume]
-           [UnityEngine.Rendering.HighDefinition HDAdditionalLightData]
            [UnityEngine.UI Text]
-           [Lasp MasterInput FilterType]
            RectTransformUtility
            BaseAgent
            QuarkEvent
@@ -37,18 +35,20 @@
   (def tele-score (atom 1))
   (def luar-score (atom 1))
 
+  (def tele-reset-count (atom 0))
+  (def luar-reset-count (atom 0))
+
   (def luar (object-named "Blue"))
   (def luar-vfx (object-named "Luar - VFX"))
   (def tele (object-named "Red"))
   (def tele-vfx (object-named "Tele - VFX"))
   )
 
-
 ; ; Inits
 
 (do 
-  ; (create-score-text :left "0")
-  ; (create-score-text :right "0")
+  (create-score-text :left "0")
+  (create-score-text :right "0")
 
 
   (defn position-event [obj e]
@@ -102,8 +102,15 @@
           pos (v3 xpos 0.5 zpos)]
     (position! luar pos)
     (position! tele (v3 (* -1 xpos) 0.5 (* -1 zpos)))
+    (when (> @tele-score 1) (swap! tele-reset-count (fn [c] (+ c 1))))
+    (when (< @tele-score 0) (swap! tele-reset-count (fn [c] (+ c -1))))
+    (when (> @luar-score 1) (swap! luar-reset-count (fn [c] (+ c 1))))
+    (when (< @luar-score 0) (swap! luar-reset-count (fn [c] (+ c -1))))
+    (update-score-text :left (str @tele-reset-count))
+    (update-score-text :right (str @luar-reset-count))
     (reset! tele-score 1)
-    (reset! luar-score 1)))
+    (reset! luar-score 1)
+    ))
 
   (defn update-score-alpha [obj k]
     (let [score-atom ((state obj k) :score-atom)
@@ -113,16 +120,16 @@
           lightlevel (* score 1000.0)
           ]
       (.SetFloat vfx "Alpha" score)
-      (.SetFloat 
-        vfx 
-        "Intensity" 
-        (MasterInput/CalculateRMS (enum-val FilterType "LowPass")))
-      (.SetFloat 
-        vfx 
-        "Roughness" 
-        (MasterInput/CalculateRMS (enum-val FilterType "Bypass")))
+      ; (.SetFloat 
+      ;   vfx 
+      ;   "Intensity" 
+      ;   (MasterInput/CalculateRMS (enum-val FilterType "LowPass")))
+      ; (.SetFloat 
+      ;   vfx 
+      ;   "Roughness" 
+      ;   (MasterInput/CalculateRMS (enum-val FilterType "Bypass")))
       (set! (.intensity light) (float lightlevel))
-      (swap! score-atom (fn [s] (- s 0.0008)))))
+      (swap! score-atom (fn [s] (- s 0.0016)))))
 
   (defrole score-alpha 
     :state { :score-atom tele-score
