@@ -37,7 +37,7 @@
     (set! (.. rect anchorMax) (v2 0.9 0.85))
     (set! (.. rect anchorMin) (v2 0.1 0.15))
     (set! (.. txt alignment) align)
-    (set! (.. txt fontSize) (int 20))
+    (set! (.. txt fontSize) (int 56))
     ))
 
 (defn update-score-text [ty text]

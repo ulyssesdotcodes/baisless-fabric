@@ -8,7 +8,9 @@
             Quaternion Rigidbody Camera Shader TextAnchor]
            [UnityEngine.VFX VisualEffect VFXEventAttribute]
            [UnityEngine.Rendering Volume]
+           [UnityEngine.Rendering.HighDefinition HDAdditionalLightData]
            [UnityEngine.UI Text]
+           [Lasp FilterType MasterInput]
            RectTransformUtility
            BaseAgent
            QuarkEvent
@@ -26,6 +28,8 @@
 (use 'game.events :reload)
 (use 'game.props :reload)
 
+(deinit)
+
 (do
   (init)
   (init-event-passer)
@@ -35,22 +39,19 @@
   (def tele-score (atom 1))
   (def luar-score (atom 1))
 
-  (def tele-reset-count (atom 0))
-  (def luar-reset-count (atom 0))
+  (def reset-count (atom 0))
 
   (def luar (object-named "Blue"))
   (def luar-vfx (object-named "Luar - VFX"))
   (def tele (object-named "Red"))
   (def tele-vfx (object-named "Tele - VFX"))
+  (create-score-text :right "0")
+
   )
 
 ; ; Inits
 
 (do 
-  (create-score-text :left "0")
-  (create-score-text :right "0")
-
-
   (defn position-event [obj e]
     (when (= (.Type e) (enum-val QuarkEventType "Transform"))
       (let [pos (.Position e)]
@@ -95,6 +96,8 @@
        ))
 
   (defn from-the-top []
+    (reset! tele-score 1)
+    (reset! luar-score 1)
     (let [xrand (?f -15 15)
           xpos (+ xrand (* (Mathf/Sign xrand) 15))
           zrand (?f -15 15)
@@ -102,34 +105,35 @@
           pos (v3 xpos 0.5 zpos)]
     (position! luar pos)
     (position! tele (v3 (* -1 xpos) 0.5 (* -1 zpos)))
-    (when (> @tele-score 1) (swap! tele-reset-count (fn [c] (+ c 1))))
-    (when (< @tele-score 0) (swap! tele-reset-count (fn [c] (+ c -1))))
-    (when (> @luar-score 1) (swap! luar-reset-count (fn [c] (+ c 1))))
-    (when (< @luar-score 0) (swap! luar-reset-count (fn [c] (+ c -1))))
-    (update-score-text :left (str @tele-reset-count))
-    (update-score-text :right (str @luar-reset-count))
-    (reset! tele-score 1)
-    (reset! luar-score 1)
+    (when (or (> @tele-score 1) (> @luar-score 1)) (swap! reset-count (fn [c] (+ c 1))))
+    (when (or (< @luar-score 0) (< @tele-score 0)) (swap! reset-count (fn [c] (+ c -1))))
+    (update-score-text :right (str @reset-count))
+    @reset-count
     ))
+
+  (defn change-act [title]
+    (create-title-text title)
+    (from-the-top)
+    (reset! reset-count 0))
 
   (defn update-score-alpha [obj k]
     (let [score-atom ((state obj k) :score-atom)
           score @score-atom
           light ((state obj k) :score-light)
           vfx ((state obj k) :score-vfx)
-          lightlevel (* score 1000.0)
+          lightlevel (* (- 1 (Math/Pow (- 1 (Math/Min score 1)) 2)) 400.0)
           ]
       (.SetFloat vfx "Alpha" score)
-      ; (.SetFloat 
-      ;   vfx 
-      ;   "Intensity" 
-      ;   (MasterInput/CalculateRMS (enum-val FilterType "LowPass")))
-      ; (.SetFloat 
-      ;   vfx 
-      ;   "Roughness" 
-      ;   (MasterInput/CalculateRMS (enum-val FilterType "Bypass")))
+      (.SetFloat 
+        vfx 
+        "Intensity" 
+        (+ 0.02 (MasterInput/CalculateRMS (enum-val FilterType "LowPass"))))
+      (.SetFloat 
+        vfx 
+        "Roughness" 
+        (+ 0.02 (MasterInput/CalculateRMS (enum-val FilterType "Bypass"))))
       (set! (.intensity light) (float lightlevel))
-      (swap! score-atom (fn [s] (- s 0.0016)))))
+      (swap! score-atom (fn [s] (- s 0.002)))))
 
   (defrole score-alpha 
     :state { :score-atom tele-score
@@ -143,7 +147,6 @@
 
 ; ; Act I
 
-(create-title-text "Act I: Connection")
 
 (do 
   (agent-listener tele "Tele" "Tele")
@@ -153,29 +156,28 @@
   (def luar-particles (object-named "Luar"))
   
   (def tele-light (object-named "Tele-Light"))
-  (def luar-light (object-named "Luar-Light")))
+  (def luar-light (object-named "Luar-Light"))
 
-(do
   (role+ tele-particles :alpha-score score-alpha)
   (state+ tele-particles :alpha-score { 
                                  :score-atom tele-score 
                                  :score-light (cmpt tele-light HDAdditionalLightData)
                                  :score-vfx (cmpt tele-vfx VisualEffect)
                                  })
-  (Debug/Log @tele-score))
+  (Debug/Log @tele-score)
 
-(do
   (role+ luar-particles :alpha-score score-alpha)
   (state+ luar-particles :alpha-score { 
                                  :score-atom luar-score 
                                  :score-light (cmpt luar-light HDAdditionalLightData)
                                  :score-vfx (cmpt luar-vfx VisualEffect)
                                  })
-  (Debug/Log @luar-score))
+  (Debug/Log @luar-score)
+  )
 
 (do
   (defn cam-far []
-    (focus-cam [tele-particles luar-particles] (v3 0 20 -4) false))
+    (focus-cam [tele-particles luar-particles] (v3 0 40 -4) false))
 
   (defn cam-near []
     (focus-cam [tele-particles luar-particles] (v3 0 4 0) false))
@@ -195,84 +197,114 @@
   (defn tele-cam-near []
     (focus-cam [tele-particles] (v3+ (.. tele transform localPosition) (v3 0 4 -4)) true)))
 
-(focus-cam [tele-particles luar-particles] (v3 0 4 60) true)
 
-(focus-cam [tele-particles] (v3 0 20 -3) false)
+(cam-far)
+
+(change-act "Act I: Connection")
+
+
+(focus-cam [tele-particles] (v3 0 10 -3) true)
+(focus-cam [luar-particles] (v3 0 20 -3) true)
 
 (from-the-top)
 
 (tele-cam-far)
+(cam-far)
+(cam-far-zoom)
 
 ; Act II
 
-(create-title-text "Act II: Obstacles")
-
 (do 
-  (dotimes [n 16] (add-cubewall))
-  (dotimes [n 16] (add-column))
-  (dotimes [n 16] (add-rectwall)))
+  (dotimes [n 8] (add-cubewall))
+  (dotimes [n 8] (add-column))
+  (dotimes [n 8] (add-rectwall)))
 
-(cam-far-zoom)
+(cam-far)
+
+(change-act "Act II: Obstacles")
+
 
 (tele-cam-far)
 
 (from-the-top)
 
-(focus-cam [tele-particles] (v3 0 10 -6) false)
+(focus-cam [luar-particles] (v3 0 10 -6) true)
 
 (rem-type :wall)
 
 ; Act III
 
-(create-title-text "Act III: Challenges")
 
-(dotimes [n 32] (add-moveable-box))
-(dotimes [n 32] (add-movable-wedge))
+(cam-far)
+(cam-far-zoom)
+
+(dotimes [n 16] (add-moveable-box))
+(dotimes [n 16] (add-movable-wedge))
+
+(change-act "Act III: Challenges")
+
+(luar-cam-near)
 
 (from-the-top)
 
-(rem-type :movable)
 
 ; Act IV
 
-(create-title-text "Act IV: Distractions")
+(do (rem-type :movable)
+  (dotimes [n 64] (add-big-consumable))
+  (dotimes [n 64] (add-small-consumable))
+  (change-act "Act IV: Distractions"))
 
 (dotimes [n 64] (add-big-consumable))
 (dotimes [n 64] (add-small-consumable))
 
+
 (from-the-top)
 
+(cam-far)
+(cam-far-zoom)
+
 (tele-cam-near)
+(luar-cam-near)
 
 (focus-cam 
   [tele-particles ] 
   (v3+ (.. tele transform localPosition) (v3 0 4 -4)) true)
 
-(rem-type :consumable)
 
 ; Act V
 
-(create-title-text "Act V: A Kiss")
+(do
+  (change-act "Act V: A Kiss")
+  (rem-type :consumable)
+  (dotimes [n 180] (add-random-prop)))
 
-(dotimes [n 128] (add-random-prop))
-(dotimes [n 16] (add-big-consumable))
-(dotimes [n 16] (add-small-consumable))
-(dotimes [n 32] (add-moveable-box))
-(dotimes [n 32] (add-movable-wedge))
-(dotimes [n 16] (add-cubewall))
-(dotimes [n 16] (add-column))
-(dotimes [n 16] (add-rectwall))
+  (dotimes [n 16] (add-big-consumable))
+  (dotimes [n 16] (add-small-consumable))
+  (dotimes [n 32] (add-moveable-box))
+  (dotimes [n 32] (add-movable-wedge))
+  (dotimes [n 16] (add-cubewall))
+  (dotimes [n 16] (add-column))
+  (dotimes [n 16] (add-rectwall))
 
+(cam-far)
+(cam-near)
 (cam-far-zoom)
 
 (tele-cam-near)
+(luar-cam-near)
 
 (from-the-top)
+
+(rem-type :movable)
+(rem-type :wall)
 
 (do
   (rem-type :wall)
   (rem-type :movable)
   (rem-type :consumable))
+
+(
 
 (create-title-text "Fin")
 
